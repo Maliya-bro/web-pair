@@ -11,15 +11,16 @@
   "author": "Maher-Zubair",
   "license": "GPL-3.0 license",
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.5.0",
-    "maher-zubair-baileys": "^6.6.5",
+    "@whiskeysockets/baileys": "latest",
+    "maher-zubair-baileys": "latest",
     "qrcode": "^1.5.3",
-    "awesome-phonenumber": "^2.64.0",
-    "pino": "^8.1.0",
-    "phone" : "3.1.30",
-    "body-parser": "^1.20.1",
-    "pastebin-js": "^1.0.6",
-    "express": "^4.18.1",
-    "path": "^0.12.7"
+    "awesome-phonenumber": "latest",
+    "pino": "latest",
+    "phone" : "latest",
+    "body-parser": "latest",
+    "pastebin-js": "latest",
+    "express": "latest",
+    "path": "latest"
    }
 }
+
