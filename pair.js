@@ -20,10 +20,10 @@ function removeFile(FilePath) {
 
 router.get('/', async (req, res) => {
     let num = req.query.number;
-    async function MalinduPairWeb() {
+    async function bot() {
         const { state, saveCreds } = await useMultiFileAuthState(`./session`);
         try {
-            let MalinduPairWeb = makeWASocket({
+            let bot = makeWASocket({
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
@@ -33,17 +33,17 @@ router.get('/', async (req, res) => {
                 browser: Browsers.macOS("Safari"),
             });
 
-            if (!MalinduPairWeb.authState.creds.registered) {
+            if (!bot.authState.creds.registered) {
                 await delay(1500);
                 num = num.replace(/[^0-9]/g, '');
-                const code = await MalinduPairWeb.requestPairingCode(num);
+                const code = await bot.requestPairingCode(num);
                 if (!res.headersSent) {
                     await res.send({ code });
                 }
             }
 
-            MalinduPairWeb.ev.on('creds.update', saveCreds);
-            MalinduPairWeb.ev.on("connection.update", async (s) => {
+            bot.ev.on('creds.update', saveCreds);
+            bot.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect } = s;
                 if (connection === "open") {
                     try {
@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
                         const sessionmaliya = fs.readFileSync('./session/creds.json');
 
                         const auth_path = './session/';
-                        const user_jid = jidNormalizedUser(MalinduPairWeb.user.id);
+                        const user_jid = jidNormalizedUser(bot.user.id);
 
                       function randomMegaId(length = 6, numberLength = 4) {
                       const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
 
                         const sid = string_session;
 
-                        const dt = await MalinduPairWeb.sendMessage(user_jid, {
+                        const dt = await bot.sendMessage(user_jid, {
                             text: sid
                         });
 
@@ -82,20 +82,20 @@ router.get('/', async (req, res) => {
                     process.exit(0);
                 } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode !== 401) {
                     await delay(10000);
-                    MalinduPairWeb();
+                    bot();
                 }
             });
         } catch (err) {
             exec('pm2 restart maliya-md');
             console.log("service restarted");
-            MalinduPairWeb();
+            bot();
             await removeFile('./session');
             if (!res.headersSent) {
                 await res.send({ code: "Service Unavailable" });
             }
         }
     }
-    return await MalinduPairWeb();
+    return await bot();
 });
 
 process.on('uncaughtException', function (err) {
