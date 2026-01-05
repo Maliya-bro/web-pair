@@ -1,131 +1,69 @@
-const express = require('express');
-const fs = require('fs');
-const { exec } = require("child_process");
+const express = require("express");
+const fs = require("fs");
 const pino = require("pino");
 const {
-    default: makeWASocket,
-    useMultiFileAuthState,
-    delay,
-    makeCacheableSignalKeyStore,
-    Browsers,
-    jidNormalizedUser
+  default: makeWASocket,
+  useMultiFileAuthState,
+  delay,
+  makeCacheableSignalKeyStore,
+  Browsers,
+  jidNormalizedUser
 } = require("@whiskeysockets/baileys");
 
-const { upload } = require('./mega');
-
+const { upload } = require("./mega");
 const router = express.Router();
 
-/* ================= HELPER ================= */
-
 function removeFile(path) {
-    if (!fs.existsSync(path)) return;
+  if (fs.existsSync(path)) {
     fs.rmSync(path, { recursive: true, force: true });
+  }
 }
 
-function randomMegaId(length = 6, numberLength = 4) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let res = '';
-    for (let i = 0; i < length; i++) {
-        res += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const num = Math.floor(Math.random() * Math.pow(10, numberLength));
-    return `${res}${num}`;
-}
+router.get("/", async (req, res) => {
+  let num = req.query.number;
+  if (!num) return res.status(400).json({ error: "Number required" });
 
-/* ================= ROUTE ================= */
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState("./session");
 
-router.get('/', async (req, res) => {
-    let num = req.query.number;
+    const sock = makeWASocket({
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }))
+      },
+      logger: pino({ level: "fatal" }),
+      browser: Browsers.macOS("Safari"),
+      printQRInTerminal: false
+    });
 
-    async function startBot() {
-        const { state, saveCreds } = await useMultiFileAuthState('./session');
+    sock.ev.on("creds.update", saveCreds);
 
-        try {
-            const sock = makeWASocket({
-                auth: {
-                    creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(
-                        state.keys,
-                        pino({ level: "fatal" })
-                    )
-                },
-                logger: pino({ level: "fatal" }),
-                printQRInTerminal: false,
-                browser: Browsers.macOS("Safari")
-            });
-
-            /* ---------- Pair Code ---------- */
-            if (!sock.authState.creds.registered) {
-                await delay(1500);
-                num = num.replace(/[^0-9]/g, '');
-                const code = await sock.requestPairingCode(num);
-                if (!res.headersSent) res.send({ code });
-            }
-
-            sock.ev.on("creds.update", saveCreds);
-
-            /* ---------- Connection ---------- */
-            sock.ev.on("connection.update", async (update) => {
-                const { connection, lastDisconnect } = update;
-
-                if (connection === "open") {
-                    try {
-                        await delay(10000);
-
-                        const userJid = jidNormalizedUser(sock.user.id);
-
-                        const megaUrl = await upload(
-                            fs.createReadStream('./session/creds.json'),
-                            `${randomMegaId()}.json`
-                        );
-
-                        const sessionId = megaUrl.replace(
-                            'https://mega.nz/file/',
-                            ''
-                        );
-
-                        await sock.sendMessage(userJid, {
-                            text: sessionId
-                        });
-
-                    } catch (err) {
-                        console.log(err);
-                        exec('pm2 restart maliya');
-                    }
-
-                    await delay(200);
-                    removeFile('./session');
-                    process.exit(0);
-                }
-
-                /* ---------- Reconnect ---------- */
-                if (
-                    connection === "close" &&
-                    lastDisconnect?.error?.output?.statusCode !== 401
-                ) {
-                    await delay(5000);
-                    startBot();
-                }
-            });
-
-        } catch (err) {
-            console.log(err);
-            exec('pm2 restart maliya-md');
-            removeFile('./session');
-            if (!res.headersSent) {
-                res.send({ code: "Service Unavailable" });
-            }
-        }
+    if (!sock.authState.creds.registered) {
+      await delay(1500);
+      num = num.replace(/[^0-9]/g, "");
+      const code = await sock.requestPairingCode(num);
+      return res.json({ code });
     }
 
-    return await startBot();
-});
+    sock.ev.on("connection.update", async (update) => {
+      if (update.connection === "open") {
+        await delay(8000);
+        const userJid = jidNormalizedUser(sock.user.id);
 
-/* ================= GLOBAL ERROR ================= */
+        const megaUrl = await upload(
+          fs.createReadStream("./session/creds.json"),
+          `session-${Date.now()}.json`
+        );
 
-process.on('uncaughtException', (err) => {
-    console.log('Caught exception:', err);
-    exec('pm2 restart maliya');
+        await sock.sendMessage(userJid, { text: megaUrl });
+        removeFile("./session");
+      }
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: "Pairing failed" });
+  }
 });
 
 module.exports = router;
