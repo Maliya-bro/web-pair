@@ -1,8 +1,10 @@
 const express = require('express');
 const fs = require('fs');
 const { exec } = require("child_process");
-let router = express.Router()
 const pino = require("pino");
+
+const router = express.Router();
+
 const {
     default: makeWASocket,
     useMultiFileAuthState,
@@ -11,97 +13,119 @@ const {
     Browsers,
     jidNormalizedUser
 } = require("@whiskeysockets/baileys");
+
 const { upload } = require('./mega');
 
-function removeFile(FilePath) {
-    if (!fs.existsSync(FilePath)) return false;
-    fs.rmSync(FilePath, { recursive: true, force: true });
+/* ------------------ HELPERS ------------------ */
+
+function removeFile(path) {
+    if (fs.existsSync(path)) {
+        fs.rmSync(path, { recursive: true, force: true });
+    }
 }
+
+function randomMegaId(length = 6, numberLength = 4) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const number = Math.floor(Math.random() * Math.pow(10, numberLength));
+    return `${result}${number}`;
+}
+
+/* ------------------ ROUTE ------------------ */
 
 router.get('/', async (req, res) => {
     let num = req.query.number;
-    async function MalinduPairWeb() {
-        const { state, saveCreds } = await useMultiFileAuthState(`./session`);
+    if (!num) return res.status(400).json({ error: "Number required" });
+
+    async function startPairWeb() {
+        const { state, saveCreds } = await useMultiFileAuthState('./session');
+
         try {
-            let MalinduPairWeb = makeWASocket({
+            const sock = makeWASocket({
                 auth: {
                     creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
+                    keys: makeCacheableSignalKeyStore(
+                        state.keys,
+                        pino({ level: "fatal" })
+                    ),
                 },
+                logger: pino({ level: "fatal" }),
                 printQRInTerminal: false,
-                logger: pino({ level: "fatal" }).child({ level: "fatal" }),
                 browser: Browsers.macOS("Safari"),
             });
 
-            if (!MalinduPairWeb.authState.creds.registered) {
+            /* ---------- PAIR CODE ---------- */
+            if (!sock.authState.creds.registered) {
                 await delay(1500);
                 num = num.replace(/[^0-9]/g, '');
-                const code = await MalinduPairWeb.requestPairingCode(num);
+                const code = await sock.requestPairingCode(num);
                 if (!res.headersSent) {
-                    await res.send({ code });
+                    res.json({ code });
                 }
             }
 
-            MalinduPairWeb.ev.on('creds.update', saveCreds);
-            MalinduPairWeb.ev.on("connection.update", async (s) => {
-                const { connection, lastDisconnect } = s;
+            sock.ev.on('creds.update', saveCreds);
+
+            /* ---------- CONNECTION ---------- */
+            sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
+
                 if (connection === "open") {
                     try {
                         await delay(10000);
-                        const sessionDanuwa = fs.readFileSync('./session/creds.json');
 
-                        const auth_path = './session/';
-                        const user_jid = jidNormalizedUser(MalinduPairWeb.user.id);
+                        const authPath = './session/creds.json';
+                        const userJid = jidNormalizedUser(sock.user.id);
 
-                      function randomMegaId(length = 6, numberLength = 4) {
-                      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                      let result = '';
-                      for (let i = 0; i < length; i++) {
-                      result += characters.charAt(Math.floor(Math.random() * characters.length));
-                        }
-                       const number = Math.floor(Math.random() * Math.pow(10, numberLength));
-                        return `${result}${number}`;
-                        }
+                        const megaUrl = await upload(
+                            fs.createReadStream(authPath),
+                            `${randomMegaId()}.json`
+                        );
 
-                        const mega_url = await upload(fs.createReadStream(auth_path + 'creds.json'), `${randomMegaId()}.json`);
+                        const sessionId = megaUrl.replace('https://mega.nz/file/', '');
 
-                        const string_session = mega_url.replace('https://mega.nz/file/', '');
+                        await sock.sendMessage(userJid, { text: sessionId });
 
-                        const sid = string_session;
-
-                        const dt = await MalinduPairWeb.sendMessage(user_jid, {
-                            text: sid
-                        });
-
-                    } catch (e) {
+                    } catch (err) {
+                        console.error("Upload error:", err);
                         exec('pm2 restart danuwa');
                     }
 
-                    await delay(100);
-                    return await removeFile('./session');
+                    await delay(200);
+                    removeFile('./session');
                     process.exit(0);
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode !== 401) {
-                    await delay(10000);
-                    MalinduPairWeb();
+                }
+
+                /* ---------- RECONNECT ---------- */
+                if (
+                    connection === "close" &&
+                    lastDisconnect?.error?.output?.statusCode !== 401
+                ) {
+                    await delay(5000);
+                    startPairWeb();
                 }
             });
+
         } catch (err) {
+            console.error("Fatal error:", err);
             exec('pm2 restart danuwa-md');
-            console.log("service restarted");
-            MalinduPairWeb();
-            await removeFile('./session');
+            removeFile('./session');
             if (!res.headersSent) {
-                await res.send({ code: "Service Unavailable" });
+                res.status(503).json({ code: "Service Unavailable" });
             }
         }
     }
-    return await MalinduPairWeb();
+
+    await startPairWeb();
 });
 
-process.on('uncaughtException', function (err) {
-    console.log('Caught exception: ' + err);
+/* ------------------ GLOBAL ERROR ------------------ */
+
+process.on('uncaughtException', (err) => {
+    console.log('Caught exception:', err);
     exec('pm2 restart danuwa');
 });
-
 
 module.exports = router;
