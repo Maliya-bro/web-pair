@@ -1,23 +1,24 @@
 {
-"name": "web-pair",
-    "version": "2.0.0",
-    "description": "A multi functional AI whatsapp bot Web paircode.",
-    "main": "index.js",
-    "scripts": {
-      "start": "pm2 start index.js --deep-monitoring --attach --name MALIYA-MD",
-      "stop": "pm2 stop MALIYA-MD",
-     "restart": "pm2 restart MALIYA-MD"
-    },
+  "name": "web-pair",
+  "version": "2.0.0",
+  "description": "A multi functional AI whatsapp bot Web paircode.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "pm2 start index.js --deep-monitoring --attach --name MALIYA-MD",
+    "stop": "pm2 stop MALIYA-MD",
+    "restart": "pm2 restart MALIYA-MD"
+  },
   "dependencies": {
     "@whiskeysockets/baileys": "latest",
     "qrcode": "latest",
     "awesome-phonenumber": "latest",
     "pino": "latest",
-    "phone" : "latest",
+    "phone": "latest",
     "body-parser": "latest",
     "express": "latest",
     "path": "latest",
     "megajs": "latest",
     "pm2": "latest"
-   }
+  }
 }
