@@ -1,4 +1,3 @@
-
 import express from "express";
 import fs from "fs";
 import pino from "pino";
@@ -41,10 +40,21 @@ router.get("/", async (req, res) => {
 
     await removeFile(dirs);
 
-    num = num.replace(/[^0-9]/g, "");
+    // ✅ safe sanitize
+    num = (num || "").toString().replace(/[^0-9]/g, "");
 
+    // ✅ awesome-phonenumber (fix: isValidNumber)
     const phone = pn("+" + num);
-    if (!phone.isValid()) {
+
+    // ✅ version-safe validity check (supports both isValidNumber / isValid)
+    const valid =
+        typeof phone.isValidNumber === "function"
+            ? phone.isValidNumber()
+            : typeof phone.isValid === "function"
+            ? phone.isValid()
+            : false;
+
+    if (!valid) {
         if (!res.headersSent) {
             return res.status(400).send({
                 code: "Invalid phone number. Please enter your full international number (e.g., 15551234567 for US, 447911123456 for UK, 84987654321 for Vietnam, etc.) without + or spaces.",
@@ -52,20 +62,22 @@ router.get("/", async (req, res) => {
         }
         return;
     }
+
+    // ✅ normalize to E164 digits-only
     num = phone.getNumber("e164").replace("+", "");
 
     async function initiateSession() {
         const { state, saveCreds } = await useMultiFileAuthState(dirs);
 
         try {
-            const { version, isLatest } = await fetchLatestBaileysVersion();
+            const { version } = await fetchLatestBaileysVersion();
             let KnightBot = makeWASocket({
                 version,
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(
                         state.keys,
-                        pino({ level: "fatal" }).child({ level: "fatal" }),
+                        pino({ level: "fatal" }).child({ level: "fatal" })
                     ),
                 },
                 printQRInTerminal: false,
@@ -92,18 +104,18 @@ router.get("/", async (req, res) => {
                         const credsPath = dirs + "/creds.json";
                         const megaUrl = await upload(
                             credsPath,
-                            `creds_${num}_${Date.now()}.json`,
+                            `creds_${num}_${Date.now()}.json`
                         );
                         const megaFileId = getMegaFileId(megaUrl);
 
                         if (megaFileId) {
                             console.log(
                                 "✅ Session uploaded to MEGA. File ID:",
-                                megaFileId,
+                                megaFileId
                             );
 
                             const userJid = jidNormalizedUser(
-                                num + "@s.whatsapp.net",
+                                num + "@s.whatsapp.net"
                             );
                             await KnightBot.sendMessage(userJid, {
                                 text: `${megaFileId}`,
@@ -144,7 +156,7 @@ router.get("/", async (req, res) => {
 
                     if (statusCode === 401) {
                         console.log(
-                            "❌ Logged out from WhatsApp. Need to generate new pair code.",
+                            "❌ Logged out from WhatsApp. Need to generate new pair code."
                         );
                     } else {
                         console.log("🔁 Connection closed — restarting...");
@@ -154,7 +166,7 @@ router.get("/", async (req, res) => {
             });
 
             if (!KnightBot.authState.creds.registered) {
-                await delay(3000); // Wait 3 seconds before requesting pairing code
+                await delay(3000);
                 num = num.replace(/[^\d+]/g, "");
                 if (num.startsWith("+")) num = num.substring(1);
 
@@ -209,5 +221,3 @@ process.on("uncaughtException", (err) => {
 });
 
 export default router;
-
-  
