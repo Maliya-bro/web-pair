@@ -21,8 +21,12 @@ const logger = pino({ level: "fatal" });
 
 function removeFile(dir) {
   try {
-    if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
-  } catch {}
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  } catch (e) {
+    console.log("Remove error:", e);
+  }
 }
 
 function getMegaFileId(url) {
@@ -33,14 +37,24 @@ function getMegaFileId(url) {
 /* ================= ROUTE ================= */
 
 router.get("/", async (req, res) => {
-  let num = (req.query.number || "").replace(/[^0-9]/g, "");
-  if (!num) return res.status(400).send({ code: "Phone number required" });
+  let num = (req.query.number || "").toString().replace(/[^0-9]/g, "");
+  if (!num) {
+    return res.status(400).send({ code: "Phone number required" });
+  }
 
   const phone = pn("+" + num);
-  if (!phone.isValid()) {
+
+  // ✅ FIX: awesome-phonenumber compatible validation
+  const valid =
+    typeof phone.isValidNumber === "function"
+      ? phone.isValidNumber()
+      : phone.isValid();
+
+  if (!valid) {
     return res.status(400).send({ code: "Invalid phone number" });
   }
 
+  // normalize to E164 digits only
   num = phone.getNumber("e164").replace("+", "");
   const sessionDir = `./session_${num}`;
 
@@ -77,12 +91,15 @@ router.get("/", async (req, res) => {
       ) {
         pairingSent = true;
         try {
-          await delay(2500); // ⚠️ IMPORTANT
+          await delay(2500); // IMPORTANT DELAY
           let code = await sock.requestPairingCode(num);
           code = code?.match(/.{1,4}/g)?.join("-") || code;
 
-          if (!res.headersSent) res.send({ code });
+          if (!res.headersSent) {
+            res.send({ code });
+          }
         } catch (e) {
+          console.log("Pair error:", e);
           if (!res.headersSent) {
             res.status(503).send({ code: "Pair code error" });
           }
@@ -111,6 +128,7 @@ router.get("/", async (req, res) => {
           removeFile(sessionDir);
           process.exit(0);
         } catch (e) {
+          console.log("Upload error:", e);
           removeFile(sessionDir);
           exec("pm2 restart maliya-md");
           process.exit(1);
