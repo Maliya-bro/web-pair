@@ -29,7 +29,12 @@ body{
   color:var(--text);
 }
 
-.wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.wrap{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:20px;
+}
 
 .card{
   width:min(520px,100%);
@@ -45,7 +50,11 @@ body{
 .brand{font-size:28px;font-weight:800}
 .sub{font-size:13px;color:var(--muted)}
 
-.divider{height:1px;background:rgba(255,255,255,.15);margin:18px 0}
+.divider{
+  height:1px;
+  background:rgba(255,255,255,.15);
+  margin:18px 0;
+}
 
 label{font-size:13px;color:var(--muted)}
 .input{
@@ -58,7 +67,10 @@ label{font-size:13px;color:var(--muted)}
   color:white;
   outline:none;
 }
-.input:focus{border-color:#6cf;box-shadow:0 0 0 4px rgba(100,200,255,.2)}
+.input:focus{
+  border-color:#6cf;
+  box-shadow:0 0 0 4px rgba(100,200,255,.2)
+}
 
 .btns{
   display:grid;
@@ -86,7 +98,6 @@ label{font-size:13px;color:var(--muted)}
 .btn-qr{
   background:linear-gradient(135deg,#2ecc71,#27ae60);
 }
-
 .btn-copy{
   background:linear-gradient(135deg,#ff9f43,#ff6b6b);
   margin-top:12px;
@@ -94,13 +105,16 @@ label{font-size:13px;color:var(--muted)}
 
 .result{
   margin-top:16px;
-  padding:14px;
+  padding:16px;
   border-radius:14px;
-  background:rgba(0,0,0,.25);
-  border:1px solid rgba(255,255,255,.15);
-  font-size:13px;
-  min-height:60px;
-  white-space:pre-wrap;
+  background:rgba(0,0,0,.30);
+  border:1px solid rgba(255,255,255,.18);
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:2px;
+  text-align:center;
+  font-family:monospace;
+  min-height:64px;
 }
 
 .footer{
@@ -119,6 +133,7 @@ label{font-size:13px;color:var(--muted)}
 <body>
 <div class="wrap">
   <div class="card">
+
     <div class="header">
       <div class="brand">MALIYA-MD</div>
       <div class="sub">Generate Pair Code or QR Securely</div>
@@ -127,7 +142,7 @@ label{font-size:13px;color:var(--muted)}
     <div class="divider"></div>
 
     <label>WhatsApp Number</label>
-    <input id="number" class="input" placeholder="9470XXXXXXX" />
+    <input id="number" class="input" placeholder="9470XXXXXXXX" />
 
     <div class="btns">
       <button class="btn btn-pair" id="btnPair">🔑 Generate Pair</button>
@@ -136,37 +151,69 @@ label{font-size:13px;color:var(--muted)}
 
     <button class="btn btn-copy" id="btnCopy">📋 Copy Result</button>
 
-    <div class="result" id="result">Result will appear here...</div>
+    <div class="result" id="result">—</div>
 
     <div class="footer">© MALIYA-MD • Premium Web Pair UI</div>
+
   </div>
 </div>
 
 <script>
-const numberEl=document.getElementById("number");
-const resultEl=document.getElementById("result");
+const numberEl = document.getElementById("number");
+const resultEl = document.getElementById("result");
 
-document.getElementById("btnPair").onclick=async()=>{
-  const n=numberEl.value.replace(/\D/g,"");
-  if(!n)return resultEl.textContent="❌ Enter number first";
-  resultEl.textContent="⏳ Generating pair code...";
-  const r=await fetch(`/pair?number=${n}`);
-  resultEl.textContent=await r.text();
+// 🔑 Generate Pair
+document.getElementById("btnPair").onclick = async () => {
+  const n = numberEl.value.replace(/\D/g,"");
+  if(!n){
+    resultEl.textContent = "ERROR";
+    return;
+  }
+
+  resultEl.textContent = "WAIT...";
+
+  try{
+    const res = await fetch(`/pair?number=${n}`);
+    const text = await res.text();
+
+    try{
+      const data = JSON.parse(text);
+      if(data.code){
+        resultEl.textContent = data.code; // ✅ ONLY CODE
+      }else if(data.message){
+        resultEl.textContent = data.message;
+      }else{
+        resultEl.textContent = text;
+      }
+    }catch{
+      resultEl.textContent = text;
+    }
+  }catch{
+    resultEl.textContent = "ERROR";
+  }
 };
 
-document.getElementById("btnQR").onclick=()=>{
-  const n=numberEl.value.replace(/\D/g,"");
-  if(!n)return resultEl.textContent="❌ Enter number first";
+// 📷 Generate QR
+document.getElementById("btnQR").onclick = () => {
+  const n = numberEl.value.replace(/\D/g,"");
+  if(!n){
+    resultEl.textContent = "ERROR";
+    return;
+  }
   window.open(`/qr?number=${n}`,"_blank");
-  resultEl.textContent="✅ QR page opened";
+  resultEl.textContent = "QR OPENED";
 };
 
-document.getElementById("btnCopy").onclick=()=>{
-  const text=resultEl.textContent.trim();
-  if(!text)return resultEl.textContent="❌ Nothing to copy";
+// 📋 Copy Result
+document.getElementById("btnCopy").onclick = () => {
+  const text = resultEl.textContent.trim();
+  if(!text || text === "—" || text === "WAIT..."){
+    resultEl.textContent = "NOTHING";
+    return;
+  }
   navigator.clipboard.writeText(text);
-  resultEl.textContent="✅ Copied to clipboard!";
+  resultEl.textContent = "COPIED ✔";
 };
 </script>
 </body>
-  </html>
+</html>
