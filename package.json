@@ -1,23 +1,31 @@
+
 {
-"name": "web-pair",
-    "version": "2.0.0",
-    "description": "A multi functional AI whatsapp bot Web paircode.",
-    "main": "index.js",
-    "scripts": {
-      "start": "pm2 start index.js --deep-monitoring --attach --name MALIYA-MD",
-      "stop": "pm2 stop MALIYA-MD",
-     "restart": "pm2 restart MALIYA-MD"
-    },
+  "name": "MALIYA-MD",
+  "version": "1.0.0",
+  "description": "MALIYA-MD - WhatsApp Pair Code Generator",
+  "main": "index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "build": "echo 'No build step required'"
+  },
+  "author": "MMT",
+  "license": "ISC",
   "dependencies": {
     "@whiskeysockets/baileys": "latest",
-    "qrcode": "latest",
-    "awesome-phonenumber": "latest",
-    "pino": "latest",
-    "phone" : "latest",
-    "body-parser": "latest",
-    "express": "latest",
-    "path": "latest",
-    "megajs": "latest",
-    "pm2": "latest"
-   }
+    "awesome-phonenumber": "7.2.0",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.2",
+    "megajs": "^1.3.9",
+    "path": "^0.12.7",
+    "phone": "3.1.55",
+    "pino": "9.5.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
+  }
 }
+
+  
