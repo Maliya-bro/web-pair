@@ -1,219 +1,430 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MALIYA-MD</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MALIYA-MD</title>
 
-<style>
-:root{
-  --text: rgba(255,255,255,.95);
-  --muted: rgba(255,255,255,.7);
-  --glass: rgba(255,255,255,.10);
-  --border: rgba(255,255,255,.22);
-  --radius: 22px;
-  --shadow: 0 18px 60px rgba(0,0,0,.45);
-}
+  <style>
+    :root {
+      --text: rgba(255,255,255,0.94);
+      --muted: rgba(255,255,255,0.70);
+      --glass-bg: rgba(255, 255, 255, 0.10);
+      --glass-border: rgba(255, 255, 255, 0.22);
+      --shadow: 0 18px 60px rgba(0,0,0,0.45);
+      --radius: 22px;
+    }
 
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;font-family:system-ui}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 
-body{
-  min-height:100vh;
-  background:
-    radial-gradient(1200px 600px at 20% 10%, rgba(0,0,0,.35), transparent 60%),
-    radial-gradient(900px 600px at 80% 90%, rgba(0,0,0,.35), transparent 60%),
-    url("https://raw.githubusercontent.com/Maliya-bro/MALIYA-MD/refs/heads/main/images/web%20pair%20backgroun%20img.png");
-  background-size:cover;
-  background-position:center;
-  color:var(--text);
-}
+    /* ✅ Background image */
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      background-image:
+        radial-gradient(1200px 600px at 20% 10%, rgba(0,0,0,0.35), transparent 60%),
+        radial-gradient(900px 600px at 80% 90%, rgba(0,0,0,0.35), transparent 60%),
+        url("https://raw.githubusercontent.com/Maliya-bro/MALIYA-MD/refs/heads/main/images/web%20pair%20backgroun%20img.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      overflow-x: hidden;
+    }
 
-.wrap{
-  min-height:100vh;
-  display:grid;
-  place-items:center;
-  padding:20px;
-}
+    /* ❄️ Snow canvas full screen */
+    #snow{
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
 
-.card{
-  width:min(520px,100%);
-  background:var(--glass);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:26px;
-  backdrop-filter:blur(16px);
-  box-shadow:var(--shadow);
-}
+    /* Optional soft shine */
+    .bg-shine{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.10) 35%, transparent 70%);
+      opacity: 0.25;
+      transform: translateX(-25%);
+      animation: shine 10s linear infinite;
+      mix-blend-mode: overlay;
+      z-index: 1;
+    }
+    @keyframes shine{
+      0%{ transform: translateX(-35%); }
+      100%{ transform: translateX(35%); }
+    }
 
-.header{text-align:center;margin-bottom:18px}
-.brand{font-size:28px;font-weight:800}
-.sub{font-size:13px;color:var(--muted)}
+    .wrap {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px 16px;
+      position: relative;
+      z-index: 5;
+    }
 
-.divider{
-  height:1px;
-  background:rgba(255,255,255,.15);
-  margin:18px 0;
-}
+    /* ✅ Glass card */
+    .card {
+      width: min(520px, 100%);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 22px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
 
-label{font-size:13px;color:var(--muted)}
-.input{
-  width:100%;
-  padding:14px;
-  margin-top:6px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.2);
-  background:rgba(0,0,0,.25);
-  color:white;
-  outline:none;
-}
-.input:focus{
-  border-color:#6cf;
-  box-shadow:0 0 0 4px rgba(100,200,255,.2)
-}
+    .card::before{
+      content: "";
+      position: absolute;
+      inset: -2px;
+      background:
+        radial-gradient(500px 240px at 20% 15%, rgba(255,255,255,0.18), transparent 60%),
+        radial-gradient(500px 240px at 85% 85%, rgba(255,255,255,0.14), transparent 60%);
+      pointer-events: none;
+    }
 
-.btns{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  margin-top:16px;
-}
+    .header{
+      position: relative;
+      display: grid;
+      gap: 6px;
+      margin-bottom: 18px;
+      text-align: center;
+    }
 
-.btn{
-  padding:14px;
-  border-radius:16px;
-  border:none;
-  font-weight:700;
-  color:white;
-  cursor:pointer;
-  transition:.25s;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
-}
-.btn:hover{transform:translateY(-3px)}
-.btn:active{transform:scale(.97)}
+    .brand{
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      font-size: 28px;
+      line-height: 1.1;
+      text-shadow: 0 8px 30px rgba(0,0,0,0.45);
+    }
 
-.btn-pair{
-  background:linear-gradient(135deg,#5f9cff,#8a5cff);
-}
-.btn-qr{
-  background:linear-gradient(135deg,#2ecc71,#27ae60);
-}
-.btn-copy{
-  background:linear-gradient(135deg,#ff9f43,#ff6b6b);
-  margin-top:12px;
-}
+    .sub{
+      font-size: 13px;
+      color: var(--muted);
+    }
 
-.result{
-  margin-top:16px;
-  padding:16px;
-  border-radius:14px;
-  background:rgba(0,0,0,.30);
-  border:1px solid rgba(255,255,255,.18);
-  font-size:20px;
-  font-weight:800;
-  letter-spacing:2px;
-  text-align:center;
-  font-family:monospace;
-  min-height:64px;
-}
+    .divider{
+      height: 1px;
+      background: rgba(255,255,255,0.14);
+      margin: 18px 0 18px;
+    }
 
-.footer{
-  margin-top:14px;
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-}
+    label{
+      font-size: 13px;
+      color: rgba(255,255,255,0.78);
+      display: block;
+      margin-bottom: 8px;
+    }
 
-@media(max-width:420px){
-  .btns{grid-template-columns:1fr}
-}
-</style>
+    .input-row{ display: grid; gap: 10px; margin-bottom: 12px; }
+
+    .input{
+      width: 100%;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      outline: none;
+      background: rgba(0,0,0,0.25);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .input:focus{
+      border-color: rgba(255,255,255,0.36);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.10);
+      transform: translateY(-1px);
+    }
+
+    .hint{
+      font-size: 12px;
+      color: rgba(255,255,255,0.62);
+      margin-top: 6px;
+      line-height: 1.35;
+    }
+
+    .btns{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .btn{
+      position: relative;
+      border: none;
+      color: #fff;
+      padding: 14px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      user-select: none;
+      transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    .btn:hover{ transform: translateY(-3px); filter: brightness(1.05); }
+    .btn:active{ transform: translateY(0px) scale(0.98); }
+
+    .btn-pair{ background: linear-gradient(135deg, #5f9cff, #8a5cff); }
+    .btn-qr{ background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .btn-copy{ background: linear-gradient(135deg, #ff9f43, #ff6b6b); margin-top: 12px; width: 100%; }
+
+    .result{
+      margin-top: 16px;
+      padding: 16px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.25);
+      min-height: 64px;
+      line-height: 1.35;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: rgba(255,255,255,0.92);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer{
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* 🎵 Floating Music Button */
+    .music-btn{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 20;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(0,0,0,.35);
+      color: rgba(255,255,255,.95);
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 14px 40px rgba(0,0,0,.45);
+      transition: transform .2s ease, background .2s ease;
+      white-space: nowrap;
+    }
+    .music-btn:hover{ transform: translateY(-2px); background: rgba(0,0,0,.45); }
+    .music-btn:active{ transform: scale(.98); }
+
+    @media (max-width: 420px){
+      .brand{ font-size: 24px; }
+      .btns{ grid-template-columns: 1fr; }
+      .music-btn{ right: 12px; bottom: 12px; padding: 10px 12px; }
+    }
+  </style>
 </head>
 
 <body>
-<div class="wrap">
-  <div class="card">
+  <!-- ❄️ Snow + shine layers -->
+  <canvas id="snow"></canvas>
+  <div class="bg-shine"></div>
 
-    <div class="header">
-      <div class="brand">MALIYA-MD</div>
-      <div class="sub">Generate Pair Code or QR Securely</div>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <div class="brand">MALIYA-MD</div>
+        <div class="sub">Enter your number below to generate Pair Code or QR</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="input-row">
+        <div>
+          <label for="number">WhatsApp Number</label>
+          <input
+            id="number"
+            class="input"
+            type="tel"
+            inputmode="numeric"
+            placeholder="94XXXXXXXXX (e.g. 94701234567)"
+            autocomplete="off"
+          />
+          <div class="hint">
+            ✅ Enter with country code. No spaces, + or - symbols.
+          </div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="btn btn-pair" id="btnPair">🔑 Generate Pair</button>
+        <button class="btn btn-qr" id="btnQR">📷 Generate QR</button>
+      </div>
+
+      <button class="btn btn-copy" id="btnCopy">📋 Copy Result</button>
+
+      <div class="result" id="result">—</div>
+
+      <div class="footer">© MALIYA-MD • Secure Web Pair UI</div>
     </div>
-
-    <div class="divider"></div>
-
-    <label>WhatsApp Number</label>
-    <input id="number" class="input" placeholder="9470XXXXXXXX" />
-
-    <div class="btns">
-      <button class="btn btn-pair" id="btnPair">🔑 Generate Pair</button>
-      <button class="btn btn-qr" id="btnQR">📷 Generate QR</button>
-    </div>
-
-    <button class="btn btn-copy" id="btnCopy">📋 Copy Result</button>
-
-    <div class="result" id="result">—</div>
-
-    <div class="footer">© MALIYA-MD • Premium Web Pair UI</div>
-
   </div>
-</div>
 
-<script>
-const numberEl = document.getElementById("number");
-const resultEl = document.getElementById("result");
+  <!-- 🎵 Song in root: song.mp3 -->
+  <audio id="bgMusic" preload="auto" loop>
+    <source src="song.mp3" type="audio/mpeg" />
+  </audio>
 
-// 🔑 Generate Pair
-document.getElementById("btnPair").onclick = async () => {
-  const n = numberEl.value.replace(/\D/g,"");
-  if(!n){
-    resultEl.textContent = "ERROR";
-    return;
-  }
+  <button id="musicBtn" class="music-btn">▶ Play Music</button>
 
-  resultEl.textContent = "WAIT...";
+  <script>
+    // ---------------------------
+    // Helpers
+    // ---------------------------
+    const numberEl = document.getElementById("number");
+    const resultEl = document.getElementById("result");
+    const btnPair = document.getElementById("btnPair");
+    const btnQR = document.getElementById("btnQR");
+    const btnCopy = document.getElementById("btnCopy");
 
-  try{
-    const res = await fetch(`/pair?number=${n}`);
-    const text = await res.text();
+    function cleanNumber(n){
+      return (n || "").replace(/[^\d]/g, "");
+    }
 
-    try{
-      const data = JSON.parse(text);
-      if(data.code){
-        resultEl.textContent = data.code; // ✅ ONLY CODE
-      }else if(data.message){
-        resultEl.textContent = data.message;
-      }else{
-        resultEl.textContent = text;
-      }
-    }catch{
+    function setResult(text){
       resultEl.textContent = text;
     }
-  }catch{
-    resultEl.textContent = "ERROR";
-  }
-};
 
-// 📷 Generate QR
-document.getElementById("btnQR").onclick = () => {
-  const n = numberEl.value.replace(/\D/g,"");
-  if(!n){
-    resultEl.textContent = "ERROR";
-    return;
-  }
-  window.open(`/qr?number=${n}`,"_blank");
-  resultEl.textContent = "QR OPENED";
-};
+    // ---------------------------
+    // Pair Code (show ONLY code)
+    // ---------------------------
+    btnPair.addEventListener("click", async () => {
+      const num = cleanNumber(numberEl.value);
+      if(!num) return setResult("❌ Please enter a number");
 
-// 📋 Copy Result
-document.getElementById("btnCopy").onclick = () => {
-  const text = resultEl.textContent.trim();
-  if(!text || text === "—" || text === "WAIT..."){
-    resultEl.textContent = "NOTHING";
-    return;
-  }
-  navigator.clipboard.writeText(text);
-  resultEl.textContent = "COPIED ✔";
-};
-</script>
+      setResult("⏳ Generating...");
+      try{
+        const res = await fetch(`/pair?number=${encodeURIComponent(num)}`);
+        const text = await res.text();
+
+        try{
+          const data = JSON.parse(text);
+          if(data?.code) return setResult(data.code);     // ✅ ONLY CODE
+          if(data?.message) return setResult(data.message);
+          return setResult(text);
+        }catch{
+          setResult(text);
+        }
+      }catch{
+        setResult("❌ Error");
+      }
+    });
+
+    // ---------------------------
+    // QR Open
+    // ---------------------------
+    btnQR.addEventListener("click", () => {
+      const num = cleanNumber(numberEl.value);
+      if(!num) return setResult("❌ Please enter a number");
+
+      const url = `/qr?number=${encodeURIComponent(num)}`;
+      setResult("✅ QR page opened");
+      window.open(url, "_blank");
+    });
+
+    // ---------------------------
+    // Copy result (copies ONLY code text shown)
+    // ---------------------------
+    btnCopy.addEventListener("click", async () => {
+      const text = (resultEl.textContent || "").trim();
+      if(!text || text === "—" || text.includes("Generating")) return setResult("❌ Nothing to copy");
+      try{
+        await navigator.clipboard.writeText(text);
+        setResult("✅ Copied!");
+        setTimeout(() => setResult(text), 900);
+      }catch{
+        setResult("❌ Copy failed");
+      }
+    });
+
+    // ---------------------------
+    // ❄️ Snow (Canvas)
+    // ---------------------------
+    const canvas = document.getElementById("snow");
+    const ctx = canvas.getContext("2d");
+
+    function resize(){
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    const flakes = Array.from({length: 140}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 1 + Math.random() * 3.6,
+      s: 0.7 + Math.random() * 2.0,
+      w: (Math.random() - 0.5) * 0.9
+    }));
+
+    function drawSnow(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.beginPath();
+      for(const f of flakes){
+        ctx.moveTo(f.x, f.y);
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+      }
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      ctx.fill();
+
+      for(const f of flakes){
+        f.y += f.s;
+        f.x += f.w;
+        if(f.y > canvas.height + 10){
+          f.y = -10;
+          f.x = Math.random() * canvas.width;
+        }
+        if(f.x > canvas.width + 10) f.x = -10;
+        if(f.x < -10) f.x = canvas.width + 10;
+      }
+      requestAnimationFrame(drawSnow);
+    }
+    drawSnow();
+
+    // ---------------------------
+    // 🎵 Music Play/Pause
+    // ---------------------------
+    const audio = document.getElementById("bgMusic");
+    const musicBtn = document.getElementById("musicBtn");
+    let playing = false;
+
+    async function toggleMusic(){
+      try{
+        if(!playing){
+          await audio.play();
+          playing = true;
+          musicBtn.textContent = "⏸ Pause Music";
+        }else{
+          audio.pause();
+          playing = false;
+          musicBtn.textContent = "▶ Play Music";
+        }
+      }catch{
+        musicBtn.textContent = "▶ Tap to Play";
+      }
+    }
+
+    musicBtn.addEventListener("click", toggleMusic);
+  </script>
 </body>
-</html>
+    </html>
