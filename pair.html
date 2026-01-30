@@ -27,8 +27,8 @@
       min-height:100vh;
       color:var(--text);
       background-image:
-        radial-gradient(1200px 600px at 20% 10%, rgba(0,0,0,.42), transparent 60%),
-        radial-gradient(900px 600px at 80% 90%, rgba(0,0,0,.42), transparent 60%),
+        radial-gradient(1200px 600px at 20% 10%, rgba(0,0,0,.45), transparent 60%),
+        radial-gradient(900px 600px at 80% 90%, rgba(0,0,0,.45), transparent 60%),
         url("https://raw.githubusercontent.com/Maliya-bro/MALIYA-MD/refs/heads/main/images/web%20pair%20backgroun%20img.png");
       background-size:cover;
       background-position:center;
@@ -43,12 +43,12 @@
       z-index:0; pointer-events:none;
     }
 
-    /* soft shine */
+    /* shine */
     .bg-shine{
       position:fixed; inset:0;
       pointer-events:none;
       background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.12) 35%, transparent 70%);
-      opacity:.20;
+      opacity:.18;
       transform:translateX(-25%);
       animation:shine 10s linear infinite;
       z-index:1;
@@ -69,77 +69,75 @@
     }
 
     /* ==========================
-       ✅ Runner Border Component
+       ✅ MAIN CARD + NEON RUNNER
        ========================== */
-    .runbox{
+    .cardWrap{
+      width:min(580px,100%);
       position:relative;
       border-radius:var(--r);
-      overflow:hidden;
     }
 
-    .runbox .runner{
+    /* This is ONLY the border runner (like your image) */
+    .runnerSVG{
       position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
+      inset:-10px;                /* expand for glow */
+      width:calc(100% + 20px);
+      height:calc(100% + 20px);
       pointer-events:none;
-      z-index:3;
-    }
-
-    /* Glow (soft) */
-    .runbox .runner .glow{
-      filter: drop-shadow(0 0 10px rgba(255, 0, 80, .25))
-              drop-shadow(0 0 20px rgba(0, 120, 255, .10));
+      z-index:2;
+      filter:
+        drop-shadow(0 0 12px rgba(255,0,120,.35))
+        drop-shadow(0 0 22px rgba(0,110,255,.18));
       opacity:.95;
     }
 
-    /* Tail (thin + fade) */
-    .runbox .runner .tail{
+    /* Only show the border lines (no inner red stuff) */
+    .runnerPath{
+      fill:none;
       stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    /* Tail: thin + fading */
+    .tail{
       stroke-width:3;
-      opacity:.55;
-      stroke-dasharray: 170 830;   /* tail length, rest */
-      animation: dashMove 2.6s linear infinite, colorCycle 6.5s linear infinite;
+      opacity:.65;
+      stroke-dasharray: 170 830;     /* tail length */
+      animation: dashMove 2.8s linear infinite, colorCycle 6.5s linear infinite;
+      filter: blur(.15px);
     }
 
-    /* Head (thick + bright) */
-    .runbox .runner .head{
-      stroke-linecap:round;
-      stroke-width:6;
+    /* Head: thick + bright */
+    .head{
+      stroke-width:6.5;
       opacity:1;
-      stroke-dasharray: 70 930;    /* head length, rest */
-      animation: dashMove 2.6s linear infinite, colorCycle 6.5s linear infinite;
+      stroke-dasharray: 70 930;      /* head length */
+      animation: dashMove 2.8s linear infinite, colorCycle 6.5s linear infinite;
     }
 
-    /* Make tail fade out to the end: gradient + mask-like feel */
-    .runbox .runner .tail{
-      filter: drop-shadow(0 0 10px rgba(255, 80, 120, .25));
-    }
-
-    /* Move around border */
+    /* Move around the whole border */
     @keyframes dashMove{
       to { stroke-dashoffset: -1000; }
     }
 
-    /* Color change sequence (ඔයා කිව්ව color order එකම) */
+    /* Your color list order */
     @keyframes colorCycle{
-      0%   { stroke: #ff2d2d; }  /* රතු */
-      11%  { stroke: #ff3aa6; }  /* රෝස */
-      22%  { stroke: #ff8c2a; }  /* තැබිලි (orange) */
-      33%  { stroke: #ffb300; }  /* තද කහ */
-      44%  { stroke: #fff176; }  /* ලා කහ */
-      55%  { stroke: #9dff9d; }  /* ලා කොළ */
-      66%  { stroke: #00c853; }  /* තද කොළ */
-      77%  { stroke: #69d2ff; }  /* ලා නිල් */
-      88%  { stroke: #1e6bff; }  /* තද නිල් */
-      100% { stroke: #ff2d2d; }  /* අයෙත් රතු */
+      0%   { stroke:#ff2d2d; }  /* රතු */
+      11%  { stroke:#ff3aa6; }  /* රෝස */
+      22%  { stroke:#ff8c2a; }  /* තැබිලි */
+      33%  { stroke:#ffb300; }  /* තද කහ */
+      44%  { stroke:#fff176; }  /* ලා කහ */
+      55%  { stroke:#9dff9d; }  /* ලා කොළ */
+      66%  { stroke:#00c853; }  /* තද කොළ */
+      77%  { stroke:#69d2ff; }  /* ලා නිල් */
+      88%  { stroke:#1e6bff; }  /* තද නිල් */
+      100% { stroke:#ff2d2d; }  /* රතු */
     }
 
-    /* ==========================
-       Card (big box)
-       ========================== */
+    /* The real card (content) */
     .card{
-      width:min(580px,100%);
+      position:relative;
+      z-index:3;
       background:var(--glass);
       border:1px solid var(--border);
       border-radius:var(--r);
@@ -147,8 +145,7 @@
       padding:26px 22px;
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-      position:relative;
-      z-index:2;
+      overflow:hidden;
     }
 
     .header{
@@ -227,22 +224,20 @@
       pointer-events:none;
     }
     .btn-pair{ background: linear-gradient(135deg, var(--blue1), var(--blue2)); }
-    .btn-qr  { background: linear-gradient(135deg, var(--green1), var(--green2)); }
+    .btn-qr  { background: linear-gradient(135deg, #2ecc71, #27ae60); }
     .btn-copy{
       background: linear-gradient(135deg, var(--orange1), var(--orange2));
       margin-top:12px;
       width:100%;
     }
 
-    /* Result box */
+    /* ✅ RESULT BOX (NO RUNNER HERE) */
     .resultbox{
       margin-top:16px;
       background:rgba(0,0,0,0.34);
       border:1px solid rgba(255,255,255,.12);
       border-radius:18px;
       padding:16px 14px;
-      position:relative;
-      overflow:hidden;
       box-shadow:0 16px 55px rgba(0,0,0,.38);
     }
 
@@ -257,11 +252,9 @@
       place-items:center;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       white-space:pre-wrap;
-      ̀position:relative;
-      z-index:4;
     }
 
-    /* Text animation when code appears */
+    /* text animation */
     .fade-in{ animation: fadeInUp .35s ease both; }
     @keyframes fadeInUp{
       from{opacity:0; transform: translateY(10px) scale(.98);}
@@ -332,14 +325,12 @@
   <div class="bg-shine"></div>
 
   <div class="wrap">
-    <!-- BIG BOX with full runner -->
-    <div class="runbox" style="border-radius: var(--r);">
-      <svg class="runner glow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <!-- pathLength=1000 makes dash math consistent -->
-        <rect x="2" y="2" width="96" height="96" rx="10" ry="10" fill="none" pathLength="1000"
-              class="tail"/>
-        <rect x="2" y="2" width="96" height="96" rx="10" ry="10" fill="none" pathLength="1000"
-              class="head"/>
+    <div class="cardWrap">
+      <!-- ✅ ONLY main card gets this runner -->
+      <svg class="runnerSVG" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <!-- Rounded rectangle border path -->
+        <rect class="runnerPath tail" x="3" y="3" width="94" height="94" rx="10" ry="10" pathLength="1000"></rect>
+        <rect class="runnerPath head" x="3" y="3" width="94" height="94" rx="10" ry="10" pathLength="1000"></rect>
       </svg>
 
       <div class="card">
@@ -360,15 +351,8 @@
 
         <button class="btn btn-copy" id="btnCopy">📋 Copy Result</button>
 
-        <!-- RESULT BOX with same runner -->
-        <div class="runbox resultbox" style="border-radius:18px;">
-          <svg class="runner glow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <rect x="2" y="2" width="96" height="96" rx="10" ry="10" fill="none" pathLength="1000"
-                  class="tail"/>
-            <rect x="2" y="2" width="96" height="96" rx="10" ry="10" fill="none" pathLength="1000"
-                  class="head"/>
-          </svg>
-
+        <!-- ✅ RESULT BOX clean (NO runner border) -->
+        <div class="resultbox">
           <div class="result fade-in" id="result">—</div>
         </div>
 
@@ -445,7 +429,7 @@
       }
     });
 
-    // QR (expects backend: /qr/data -> { qr: "data:image/png;base64,..." })
+    // QR (backend: /qr/data -> { qr: "data:image/png;base64,..." })
     btnQR.addEventListener("click", async () => {
       const num = clean(numberEl.value);
       if(!num) return showAnimatedText("❌ Enter number");
@@ -483,7 +467,7 @@
       }
     });
 
-    // Music toggle
+    // Music
     function setMusicUI(on){
       musicText.textContent = on ? "Pause Music" : "Play Music";
       musicDot.classList.toggle("playing", on);
@@ -509,13 +493,8 @@
     // Snow
     const canvas = document.getElementById("snow");
     const ctx = canvas.getContext("2d");
-
-    function resize(){
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener("resize", resize);
+    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+    resize(); addEventListener("resize", resize);
 
     const flakes = Array.from({length: 140}, () => ({
       x: Math.random() * canvas.width,
@@ -536,12 +515,8 @@
       ctx.fill();
 
       for(const f of flakes){
-        f.y += f.s;
-        f.x += f.w;
-        if(f.y > canvas.height + 10){
-          f.y = -10;
-          f.x = Math.random() * canvas.width;
-        }
+        f.y += f.s; f.x += f.w;
+        if(f.y > canvas.height + 10){ f.y = -10; f.x = Math.random() * canvas.width; }
         if(f.x > canvas.width + 10) f.x = -10;
         if(f.x < -10) f.x = canvas.width + 10;
       }
