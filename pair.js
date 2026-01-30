@@ -26,11 +26,20 @@ function getMegaFileId(url) {
   return m ? m[1] : null;
 }
 
-async function waitForFile(filePath, timeoutMs = 15000) {
+async function waitForFile(filePath, timeoutMs = 20000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     if (fs.existsSync(filePath)) return true;
     await delay(300);
+  }
+  return false;
+}
+
+async function waitUntilRegistered(sock, timeoutMs = 60000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (sock?.authState?.creds?.registered) return true;
+    await delay(500);
   }
   return false;
 }
@@ -45,7 +54,7 @@ router.get("/", async (req, res) => {
   num = phone.getNumber("e164").replace("+", "");
   const sessionDir = "./" + num;
 
-  // clean old session
+  // ✅ clean old
   removeFile(sessionDir);
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
@@ -62,84 +71,61 @@ router.get("/", async (req, res) => {
     printQRInTerminal: false,
   });
 
-  // IMPORTANT: avoid infinite loops
-  let handledOpen = false;
-
   sock.ev.on("creds.update", async () => {
     try { await saveCreds(); } catch {}
   });
 
-  sock.ev.on("connection.update", async (u) => {
-    try {
-      if (u.connection === "open" && !handledOpen) {
-        handledOpen = true;
-
-        // ✅ force save creds now
-        try { await saveCreds(); } catch {}
-
-        const credsPath = sessionDir + "/creds.json";
-
-        // ✅ wait until file exists (deploy වල fast timing fix)
-        const ok = await waitForFile(credsPath, 20000);
-        if (!ok) {
-          console.error("❌ creds.json not found in time:", credsPath);
-          try { await sock.end(); } catch {}
-          removeFile(sessionDir);
-          return;
-        }
-
-        // ✅ upload to mega
-        let megaUrl;
-        try {
-          megaUrl = await upload(credsPath, `creds_${num}_${Date.now()}.json`);
-        } catch (e) {
-          console.error("❌ MEGA upload failed:", e?.message || e);
-          try { await sock.end(); } catch {}
-          removeFile(sessionDir);
-          return;
-        }
-
-        const fileId = getMegaFileId(megaUrl);
-
-        // ✅ send to same whatsapp number inbox
-        try {
-          if (fileId) {
-            await sock.sendMessage(
-              jidNormalizedUser(num + "@s.whatsapp.net"),
-              { text: fileId }
-            );
-          } else {
-            // fallback: send full URL if fileId parse fail
-            await sock.sendMessage(
-              jidNormalizedUser(num + "@s.whatsapp.net"),
-              { text: megaUrl }
-            );
-          }
-        } catch (e) {
-          console.error("❌ sendMessage failed:", e?.message || e);
-        }
-
-        // ✅ cleanup without killing server
-        await delay(1200);
-        try { await sock.end(); } catch {}
-        removeFile(sessionDir);
-      }
-
-      if (u.connection === "close") {
-        // just cleanup; do NOT restart endlessly inside deployment
-        await delay(300);
-        removeFile(sessionDir);
-      }
-    } catch (e) {
-      console.error("❌ connection.update error:", e?.message || e);
-    }
-  });
-
-  // send pairing code response
+  // ✅ Pair code generate
   if (!sock.authState.creds.registered) {
     await delay(1200);
-    const code = await sock.requestPairingCode(num);
-    return res.json({ code: code.match(/.{1,4}/g).join("-") });
+    const codeRaw = await sock.requestPairingCode(num);
+    const code = codeRaw.match(/.{1,4}/g).join("-");
+
+    // ✅ IMPORTANT: respond immediately (UI shows code)
+    res.json({ code });
+
+    // ✅ Now WAIT until user finishes pairing (fix for "Logging in" stuck)
+    const okReg = await waitUntilRegistered(sock, 70000);
+    if (!okReg) {
+      console.error("❌ Pairing timeout (still not registered)");
+      try { await sock.end(); } catch {}
+      removeFile(sessionDir);
+      return;
+    }
+
+    // ✅ make sure creds saved + file exists
+    try { await saveCreds(); } catch {}
+    const credsPath = sessionDir + "/creds.json";
+    const okFile = await waitForFile(credsPath, 20000);
+    if (!okFile) {
+      console.error("❌ creds.json not found in time");
+      try { await sock.end(); } catch {}
+      removeFile(sessionDir);
+      return;
+    }
+
+    // ✅ upload + send to inbox
+    try {
+      const megaUrl = await upload(credsPath, `creds_${num}_${Date.now()}.json`);
+      const fileId = getMegaFileId(megaUrl);
+
+      try {
+        await sock.sendMessage(
+          jidNormalizedUser(num + "@s.whatsapp.net"),
+          { text: fileId || megaUrl }
+        );
+      } catch (e) {
+        console.error("❌ sendMessage failed:", e?.message || e);
+      }
+    } catch (e) {
+      console.error("❌ MEGA upload failed:", e?.message || e);
+    }
+
+    // ✅ cleanup (after everything)
+    await delay(1500);
+    try { await sock.end(); } catch {}
+    removeFile(sessionDir);
+    return;
   }
 
   return res.json({ code: "Already registered" });
