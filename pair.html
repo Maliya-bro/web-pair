@@ -13,6 +13,7 @@
       --glass2: rgba(0,0,0,.30);
       --border: rgba(255,255,255,.16);
       --shadow: 0 22px 80px rgba(0,0,0,.55);
+
       --r: 22px;
 
       --blue1:#4ea6ff; --blue2:#8a5cff;
@@ -68,59 +69,65 @@
       z-index:5;
     }
 
-    /* ==========================
-       ✅ MAIN CARD + NEON RUNNER
-       ========================== */
-    .cardWrap{
-      width:min(580px,100%);
+    /* =========================================================
+       ✅ Runner Border (tiny pen-line) — reusable for any box
+       ========================================================= */
+    .runnerBox{
       position:relative;
-      border-radius:var(--r);
+      border-radius:var(--rb, var(--r));
     }
 
-    /* This is ONLY the border runner (like your image) */
-    .runnerSVG{
+    .runnerBox .runnerSVG{
       position:absolute;
-      inset:-10px;                /* expand for glow */
-      width:calc(100% + 20px);
-      height:calc(100% + 20px);
+      inset:-14px; /* space for glow */
+      width:calc(100% + 28px);
+      height:calc(100% + 28px);
       pointer-events:none;
-      z-index:2;
+      z-index:3;
+      opacity:1;
       filter:
-        drop-shadow(0 0 12px rgba(255,0,120,.35))
-        drop-shadow(0 0 22px rgba(0,110,255,.18));
-      opacity:.95;
+        drop-shadow(0 0 10px rgba(255,0,120,.35))
+        drop-shadow(0 0 18px rgba(0,110,255,.22))
+        drop-shadow(0 0 26px rgba(255,200,0,.14));
     }
 
-    /* Only show the border lines (no inner red stuff) */
-    .runnerPath{
+    .runnerBox .runnerPath{
       fill:none;
       stroke-linecap:round;
       stroke-linejoin:round;
     }
 
-    /* Tail: thin + fading */
-    .tail{
-      stroke-width:3;
-      opacity:.65;
-      stroke-dasharray: 170 830;     /* tail length */
-      animation: dashMove 2.8s linear infinite, colorCycle 6.5s linear infinite;
-      filter: blur(.15px);
+    /* Tail = thinner + more transparent (pen tail) */
+    .runnerBox .tail{
+      stroke-width:2.6;
+      opacity:.40;
+      stroke-dasharray: 60 940;      /* tiny tail */
+      animation: dashMove var(--spd, 2.6s) linear infinite, colorCycle 6.5s linear infinite;
+      filter: blur(.2px);
     }
 
-    /* Head: thick + bright */
-    .head{
-      stroke-width:6.5;
+    /* Head = short + super highlight */
+    .runnerBox .head{
+      stroke-width:5.6;
       opacity:1;
-      stroke-dasharray: 70 930;      /* head length */
-      animation: dashMove 2.8s linear infinite, colorCycle 6.5s linear infinite;
+      stroke-dasharray: 22 978;      /* tiny “pen” head */
+      animation: dashMove var(--spd, 2.6s) linear infinite, colorCycle 6.5s linear infinite;
     }
 
-    /* Move around the whole border */
+    /* extra glow copy (makes head pop) */
+    .runnerBox .headGlow{
+      stroke-width:8.6;
+      opacity:.22;
+      stroke-dasharray: 22 978;
+      animation: dashMove var(--spd, 2.6s) linear infinite, colorCycle 6.5s linear infinite;
+      filter: blur(1.4px);
+    }
+
     @keyframes dashMove{
       to { stroke-dashoffset: -1000; }
     }
 
-    /* Your color list order */
+    /* Color cycle order you asked */
     @keyframes colorCycle{
       0%   { stroke:#ff2d2d; }  /* රතු */
       11%  { stroke:#ff3aa6; }  /* රෝස */
@@ -134,10 +141,11 @@
       100% { stroke:#ff2d2d; }  /* රතු */
     }
 
-    /* The real card (content) */
+    /* =========================================================
+       Main card
+       ========================================================= */
     .card{
-      position:relative;
-      z-index:3;
+      width:min(580px,100%);
       background:var(--glass);
       border:1px solid var(--border);
       border-radius:var(--r);
@@ -146,12 +154,11 @@
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       overflow:hidden;
+      position:relative;
+      z-index:2;
     }
 
-    .header{
-      text-align:center;
-      margin-bottom:14px;
-    }
+    .header{ text-align:center; margin-bottom:14px; }
     .title{
       font-weight:1000;
       letter-spacing:.8px;
@@ -187,6 +194,7 @@
       box-shadow:0 0 0 4px rgba(255,255,255,.10);
       transform:translateY(-1px);
     }
+
     .hint{
       font-size:12px;
       color:rgba(255,255,255,.62);
@@ -224,21 +232,23 @@
       pointer-events:none;
     }
     .btn-pair{ background: linear-gradient(135deg, var(--blue1), var(--blue2)); }
-    .btn-qr  { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .btn-qr  { background: linear-gradient(135deg, var(--green1), var(--green2)); }
     .btn-copy{
       background: linear-gradient(135deg, var(--orange1), var(--orange2));
       margin-top:12px;
       width:100%;
     }
 
-    /* ✅ RESULT BOX (NO RUNNER HERE) */
-    .resultbox{
+    /* Result box (now ALSO has runner border) */
+    .resultCard{
       margin-top:16px;
       background:rgba(0,0,0,0.34);
       border:1px solid rgba(255,255,255,.12);
       border-radius:18px;
       padding:16px 14px;
       box-shadow:0 16px 55px rgba(0,0,0,.38);
+      position:relative;
+      z-index:2;
     }
 
     .result{
@@ -325,12 +335,13 @@
   <div class="bg-shine"></div>
 
   <div class="wrap">
-    <div class="cardWrap">
-      <!-- ✅ ONLY main card gets this runner -->
+
+    <!-- MAIN CARD with runner -->
+    <div class="runnerBox" style="--rb: 22px; --spd: 2.6s;">
       <svg class="runnerSVG" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <!-- Rounded rectangle border path -->
-        <rect class="runnerPath tail" x="3" y="3" width="94" height="94" rx="10" ry="10" pathLength="1000"></rect>
-        <rect class="runnerPath head" x="3" y="3" width="94" height="94" rx="10" ry="10" pathLength="1000"></rect>
+        <rect class="runnerPath tail"     x="4" y="4" width="92" height="92" rx="10" ry="10" pathLength="1000"></rect>
+        <rect class="runnerPath headGlow" x="4" y="4" width="92" height="92" rx="10" ry="10" pathLength="1000"></rect>
+        <rect class="runnerPath head"     x="4" y="4" width="92" height="92" rx="10" ry="10" pathLength="1000"></rect>
       </svg>
 
       <div class="card">
@@ -351,14 +362,23 @@
 
         <button class="btn btn-copy" id="btnCopy">📋 Copy Result</button>
 
-        <!-- ✅ RESULT BOX clean (NO runner border) -->
-        <div class="resultbox">
-          <div class="result fade-in" id="result">—</div>
+        <!-- RESULT BOX: NOW ALSO WITH THE SAME runner -->
+        <div class="runnerBox" style="--rb: 18px; --spd: 2.2s; margin-top:16px;">
+          <svg class="runnerSVG" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <rect class="runnerPath tail"     x="6" y="6" width="88" height="88" rx="10" ry="10" pathLength="1000"></rect>
+            <rect class="runnerPath headGlow" x="6" y="6" width="88" height="88" rx="10" ry="10" pathLength="1000"></rect>
+            <rect class="runnerPath head"     x="6" y="6" width="88" height="88" rx="10" ry="10" pathLength="1000"></rect>
+          </svg>
+
+          <div class="resultCard" style="border-radius:18px;">
+            <div class="result fade-in" id="result">—</div>
+          </div>
         </div>
 
         <div class="footer">© MALIYA-MD</div>
       </div>
     </div>
+
   </div>
 
   <!-- 🎵 Song -->
