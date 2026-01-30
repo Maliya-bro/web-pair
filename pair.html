@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MALIYA-MD</title>
+  <title>MALIYA-MD • Web Pair</title>
 
   <style>
     :root{
-      --text: rgba(255,255,255,.95);
+      --text: rgba(255,255,255,.94);
       --muted: rgba(255,255,255,.72);
       --glass: rgba(255,255,255,.10);
-      --glass2: rgba(0,0,0,.25);
+      --glass2: rgba(0,0,0,.28);
       --border: rgba(255,255,255,.18);
-      --shadow: 0 18px 70px rgba(0,0,0,.50);
+      --shadow: 0 22px 80px rgba(0,0,0,.55);
       --r: 22px;
 
       --blue1:#4ea6ff; --blue2:#8a5cff;
       --green1:#2ecc71; --green2:#27ae60;
       --orange1:#ffb347; --orange2:#ff6b6b;
 
-      --danger1:#ff2d2d; --danger2:#ff005d;
+      --red1:#ff2d2d; --pink:#ff007a;
     }
 
     *{margin:0;padding:0;box-sizing:border-box}
@@ -29,8 +29,8 @@
       min-height:100vh;
       color:var(--text);
       background-image:
-        radial-gradient(1200px 600px at 20% 10%, rgba(0,0,0,0.38), transparent 60%),
-        radial-gradient(900px 600px at 80% 90%, rgba(0,0,0,0.38), transparent 60%),
+        radial-gradient(1200px 600px at 20% 10%, rgba(0,0,0,.40), transparent 60%),
+        radial-gradient(900px 600px at 80% 90%, rgba(0,0,0,.40), transparent 60%),
         url("https://raw.githubusercontent.com/Maliya-bro/MALIYA-MD/refs/heads/main/images/web%20pair%20backgroun%20img.png");
       background-size:cover;
       background-position:center;
@@ -72,7 +72,7 @@
 
     /* ✅ Main glass card */
     .card{
-      width:min(560px,100%);
+      width:min(580px,100%);
       background:var(--glass);
       border:1px solid rgba(255,255,255,.20);
       border-radius:var(--r);
@@ -88,9 +88,86 @@
       position:absolute;
       inset:-2px;
       background:
-        radial-gradient(500px 240px at 20% 15%, rgba(255,255,255,0.18), transparent 60%),
-        radial-gradient(500px 240px at 85% 85%, rgba(255,255,255,0.14), transparent 60%);
+        radial-gradient(520px 260px at 15% 10%, rgba(255,255,255,0.18), transparent 60%),
+        radial-gradient(520px 260px at 88% 92%, rgba(255,255,255,0.14), transparent 60%);
       pointer-events:none;
+    }
+
+    .topbar{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      z-index:2;
+      margin-bottom:14px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:999px;
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 14px 40px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .logo{
+      width:34px;height:34px;border-radius:14px;
+      background:linear-gradient(135deg, var(--blue1), var(--blue2));
+      box-shadow: 0 12px 35px rgba(0,0,0,.35);
+      position:relative;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+    .logo::after{
+      content:"";
+      position:absolute; inset:-60%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.25), transparent 55%);
+      transform: rotate(18deg);
+    }
+
+    .brand{
+      font-weight:1000;
+      letter-spacing:.8px;
+      font-size:18px;
+      line-height:1.1;
+    }
+    .status{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.1;
+    }
+
+    .chip{
+      font-size:12px;
+      color:rgba(255,255,255,.88);
+      padding:10px 12px;
+      border-radius:999px;
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.16);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      user-select:none;
+    }
+    .chip .dot{
+      width:10px;height:10px;border-radius:999px;
+      background:rgba(255,255,255,.60);
+      box-shadow:0 0 18px rgba(255,255,255,.20);
+    }
+    .chip .dot.playing{
+      background: rgba(46, 204, 113, .95);
+      box-shadow: 0 0 18px rgba(46, 204, 113, .65);
+      animation:pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ transform: scale(1); opacity:.9; }
+      50%{ transform: scale(1.35); opacity:1; }
     }
 
     .header{
@@ -98,19 +175,23 @@
       text-align:center;
       display:grid;
       gap:6px;
-      margin-bottom:18px;
+      z-index:2;
+      margin-bottom:16px;
     }
-    .brand{
+    .title{
       font-weight:1000;
       letter-spacing:.8px;
       font-size:30px;
       text-shadow:0 10px 40px rgba(0,0,0,.55);
     }
     .sub{font-size:13px;color:var(--muted)}
+
     .divider{
       height:1px;
       background:rgba(255,255,255,.14);
       margin:18px 0;
+      position:relative;
+      z-index:2;
     }
 
     label{
@@ -118,6 +199,11 @@
       color:rgba(255,255,255,.82);
       display:block;
       margin-bottom:8px;
+      position:relative;
+      z-index:2;
+    }
+
+    .field{
       position:relative;
       z-index:2;
     }
@@ -132,15 +218,21 @@
       color:var(--text);
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
       transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
-      position:relative;
-      z-index:2;
     }
     .input:focus{
       border-color:rgba(255,255,255,.36);
       box-shadow:0 0 0 4px rgba(255,255,255,.10);
       transform:translateY(-1px);
     }
-    .hint{font-size:12px;color:rgba(255,255,255,.62);margin-top:8px;line-height:1.35;position:relative;z-index:2}
+
+    .hint{
+      font-size:12px;
+      color:rgba(255,255,255,.62);
+      margin-top:8px;
+      line-height:1.35;
+      position:relative;
+      z-index:2;
+    }
 
     .btns{
       display:grid;
@@ -164,6 +256,7 @@
       box-shadow:0 14px 40px rgba(0,0,0,.42);
       position:relative;
       overflow:hidden;
+      outline:none;
     }
     .btn::after{
       content:"";
@@ -171,7 +264,7 @@
       inset:-40%;
       background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.20), transparent 55%);
       transform:rotate(18deg);
-      opacity:.75;
+      opacity:.85;
       pointer-events:none;
     }
     .btn:hover{transform:translateY(-3px);filter:brightness(1.05)}
@@ -187,37 +280,57 @@
       z-index:2;
     }
 
-    /* ✅ Result container + animated red border */
+    /* ✅ Result + racing red border */
     .result-shell{
       margin-top:16px;
-      border-radius:18px;
       position:relative;
-      padding:2px;               /* border thickness */
+      border-radius:18px;
+      padding:2px; /* border thickness */
       overflow:hidden;
       z-index:2;
-      box-shadow:0 14px 45px rgba(0,0,0,.35);
+      box-shadow:0 16px 55px rgba(0,0,0,.38);
     }
 
+    /* the red "runner" */
     .result-shell::before{
       content:"";
       position:absolute;
-      inset:-120%;
-      background: conic-gradient(
-        from 0deg,
-        rgba(255,0,90,0.0),
-        rgba(255,45,45,0.90),
-        rgba(255,0,93,0.90),
-        rgba(255,45,45,0.90),
-        rgba(255,0,90,0.0)
-      );
-      animation: spin 2.4s linear infinite;
+      inset:0;
+      border-radius:inherit;
+      background:
+        conic-gradient(
+          from 0deg,
+          transparent 0deg,
+          rgba(255,0,0,0.0) 35deg,
+          rgba(255,45,45,1) 52deg,
+          rgba(255,0,122,1) 64deg,
+          rgba(255,45,45,1) 78deg,
+          rgba(255,0,0,0.0) 95deg,
+          transparent 360deg
+        );
+      animation:borderRun 2.0s linear infinite;
+      filter: drop-shadow(0 0 14px rgba(255,0,90,.55));
+    }
+
+    /* mask center so only border shows */
+    .result-shell::after{
+      content:"";
+      position:absolute;
+      inset:2px;
+      border-radius:16px;
+      background:rgba(0,0,0,0.34);
+      border:1px solid rgba(255,255,255,.12);
+      z-index:1;
+    }
+
+    @keyframes borderRun{
+      to{ transform: rotate(360deg); }
     }
 
     .result{
-      background:rgba(0,0,0,0.34);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      min-height:72px;
+      position:relative;
+      z-index:2;
+      min-height:76px;
       padding:16px 14px;
       text-align:center;
       font-size:20px;
@@ -226,14 +339,8 @@
       word-break:break-word;
       display:grid;
       place-items:center;
-      position:relative;
-      z-index:2;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       white-space:pre-wrap;
-    }
-
-    @keyframes spin{
-      to{ transform: rotate(360deg); }
     }
 
     .footer{
@@ -245,12 +352,22 @@
       z-index:2;
     }
 
-    /* 🎵 Floating music button */
-    .music-btn{
+    /* small helper note */
+    .mini{
+      font-size:12px;
+      color:rgba(255,255,255,.58);
+      text-align:center;
+      margin-top:10px;
+      position:relative;
+      z-index:2;
+    }
+
+    /* music floating button (mobile-friendly) */
+    .music-float{
       position:fixed;
       right:16px;
       bottom:16px;
-      z-index:20;
+      z-index:30;
       border:1px solid rgba(255,255,255,.25);
       background:rgba(0,0,0,.35);
       color:rgba(255,255,255,.95);
@@ -266,28 +383,15 @@
       display:flex;
       gap:10px;
       align-items:center;
+      user-select:none;
     }
-    .music-btn:hover{transform:translateY(-2px); background:rgba(0,0,0,.45); filter:brightness(1.05)}
-    .music-btn:active{transform:scale(.98)}
-    .dot{
-      width:10px;height:10px;border-radius:999px;
-      background:rgba(255,255,255,.65);
-      box-shadow:0 0 18px rgba(255,255,255,.25);
-    }
-    .dot.playing{
-      background: rgba(46, 204, 113, .95);
-      box-shadow: 0 0 18px rgba(46, 204, 113, .65);
-      animation: pulse 1s ease-in-out infinite;
-    }
-    @keyframes pulse{
-      0%,100%{ transform: scale(1); opacity:.9; }
-      50%{ transform: scale(1.35); opacity:1; }
-    }
+    .music-float:hover{transform:translateY(-2px); background:rgba(0,0,0,.45); filter:brightness(1.05)}
+    .music-float:active{transform:scale(.98)}
 
     @media (max-width:420px){
-      .brand{font-size:26px}
+      .title{font-size:26px}
       .btns{grid-template-columns:1fr}
-      .music-btn{right:12px;bottom:12px;padding:10px 12px}
+      .music-float{right:12px;bottom:12px;padding:10px 12px}
     }
   </style>
 </head>
@@ -298,16 +402,40 @@
 
   <div class="wrap">
     <div class="card">
+      <div class="topbar">
+        <div class="pill">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div class="brand">MALIYA-MD</div>
+            <div class="status" id="netStatus">Ready • Online UI</div>
+          </div>
+        </div>
+
+        <div class="chip" title="Music status">
+          <span id="chipDot" class="dot"></span>
+          <span id="chipText">Music Off</span>
+        </div>
+      </div>
+
       <div class="header">
-        <div class="brand">MALIYA-MD</div>
-        <div class="sub">Enter your number to generate Pair Code or QR</div>
+        <div class="title">Modern Web Pair</div>
+        <div class="sub">Generate Pair Code or QR instantly (Replit-ready)</div>
       </div>
 
       <div class="divider"></div>
 
-      <label for="number">WhatsApp Number</label>
-      <input id="number" class="input" type="tel" inputmode="numeric" placeholder="94701234567" autocomplete="off" />
-      <div class="hint">✅ Country code එක්ක. spaces / + / - නැතුව.</div>
+      <div class="field">
+        <label for="number">WhatsApp Number</label>
+        <input
+          id="number"
+          class="input"
+          type="tel"
+          inputmode="numeric"
+          placeholder="94701234567"
+          autocomplete="off"
+        />
+        <div class="hint">✅ Country code එක්ක. spaces / + / - නැතුව.</div>
+      </div>
 
       <div class="btns">
         <button class="btn btn-pair" id="btnPair">🔑 Generate Pair</button>
@@ -320,7 +448,8 @@
         <div class="result" id="result">—</div>
       </div>
 
-      <div class="footer">© MALIYA-MD • Modern Web Pair UI</div>
+      <div class="mini" id="miniNote">Tip: QR එක ගන්න “Generate QR” ඔබන්න</div>
+      <div class="footer">© MALIYA-MD • Glass • Neon • Modern UI</div>
     </div>
   </div>
 
@@ -329,46 +458,84 @@
     <source src="song.mp3" type="audio/mpeg" />
   </audio>
 
-  <button id="musicBtn" class="music-btn" title="Play / Pause">
-    <span id="musicDot" class="dot"></span>
-    <span id="musicText">Play Music</span>
+  <!-- 🎵 Floating music control -->
+  <button id="musicBtn" class="music-float" title="Play / Pause Music">
+    <span id="musicFloatDot" class="dot"></span>
+    <span id="musicFloatText">Play Music</span>
   </button>
 
   <script>
+    // Elements
     const numberEl = document.getElementById("number");
     const resultEl = document.getElementById("result");
     const btnPair = document.getElementById("btnPair");
     const btnQR = document.getElementById("btnQR");
     const btnCopy = document.getElementById("btnCopy");
 
+    const netStatus = document.getElementById("netStatus");
+    const miniNote = document.getElementById("miniNote");
+
     const audio = document.getElementById("bgMusic");
+
+    const chipDot = document.getElementById("chipDot");
+    const chipText = document.getElementById("chipText");
+
     const musicBtn = document.getElementById("musicBtn");
-    const musicText = document.getElementById("musicText");
-    const musicDot = document.getElementById("musicDot");
+    const musicFloatDot = document.getElementById("musicFloatDot");
+    const musicFloatText = document.getElementById("musicFloatText");
 
     function clean(n){ return (n||"").replace(/[^\d]/g,""); }
     function setText(t){ resultEl.textContent = t; }
+
+    function setLoading(label){
+      setText("⏳ " + label + "...");
+      miniNote.textContent = "Please wait...";
+    }
+    function setReady(note){
+      miniNote.textContent = note || "Ready";
+    }
+
+    // simple online/offline indicator
+    function updateNet(){
+      if(navigator.onLine){
+        netStatus.textContent = "Ready • Online UI";
+      }else{
+        netStatus.textContent = "Offline • Check connection";
+      }
+    }
+    window.addEventListener("online", updateNet);
+    window.addEventListener("offline", updateNet);
+    updateNet();
 
     // 🔑 Pair (shows ONLY code)
     btnPair.addEventListener("click", async () => {
       const num = clean(numberEl.value);
       if(!num) return setText("❌ Please enter a number");
 
-      setText("⏳ Generating...");
+      setLoading("Generating Pair");
       try{
         const res = await fetch(`/pair?number=${encodeURIComponent(num)}`);
         const text = await res.text();
 
         try{
           const data = JSON.parse(text);
-          if(data?.code) return setText(data.code);
-          if(data?.message) return setText(data.message);
-          return setText(text);
+          if(data?.code){
+            setText(data.code);
+            return setReady("✅ Pair code generated");
+          }
+          if(data?.message){
+            setText(data.message);
+            return setReady("⚠️ " + data.message);
+          }
+          setText(text);
+          setReady("✅ Done");
         }catch{
           setText(text);
+          setReady("✅ Done");
         }
       }catch{
         setText("❌ Error");
+        setReady("❌ Request failed");
       }
     });
 
@@ -377,62 +544,81 @@
       const num = clean(numberEl.value);
       if(!num) return setText("❌ Please enter a number");
 
-      setText("⏳ Generating QR...");
+      setLoading("Generating QR");
       try{
         const res = await fetch(`/qr/data?number=${encodeURIComponent(num)}`);
         const data = await res.json();
 
-        if(!data?.qr) return setText("❌ QR failed");
+        if(!data?.qr){
+          setText("❌ QR failed");
+          return setReady("❌ Try again");
+        }
 
-        // show QR image in result box
-        resultEl.innerHTML = `<img src="${data.qr}" style="max-width:100%;border-radius:14px" />`;
+        // show QR image
+        resultEl.innerHTML = `<img src="${data.qr}" alt="QR Code" style="max-width:100%;border-radius:14px" />`;
+        setReady("✅ Scan QR with WhatsApp");
       }catch{
         setText("❌ QR error");
+        setReady("❌ Try again");
       }
     });
 
     // 📋 Copy (If QR image is shown, copy the API link instead)
     btnCopy.addEventListener("click", async () => {
       const num = clean(numberEl.value);
-      const isImg = resultEl.querySelector("img");
+      const hasImg = !!resultEl.querySelector("img");
 
-      // if image, copy the API url (useful)
-      const text = isImg
+      const text = hasImg
         ? `${location.origin}/qr/data?number=${encodeURIComponent(num)}`
         : (resultEl.textContent || "").trim();
 
-      if(!text || text === "—" || text.includes("Generating")) return setText("❌ Nothing to copy");
+      if(!text || text === "—" || text.includes("⏳")) return;
 
       try{
         await navigator.clipboard.writeText(text);
-        const prev = resultEl.textContent;
-        setText("✅ Copied!");
-        setTimeout(() => setText(prev || "—"), 900);
+        const prev = hasImg ? "✅ Copied QR Link!" : "✅ Copied!";
+        setText(prev);
+        setTimeout(() => {
+          if(hasImg){
+            resultEl.innerHTML = `<img src="${location.origin}/qr/data?number=${encodeURIComponent(num)}" style="max-width:100%;border-radius:14px" onerror="this.remove()" />`;
+          }else{
+            setText(text);
+          }
+        }, 900);
+        setReady("✅ Copied to clipboard");
       }catch{
-        setText("❌ Copy failed");
+        setReady("❌ Copy failed");
       }
     });
 
     // 🎵 Music play/pause
     let playing = false;
+
+    function setMusicUI(on){
+      chipText.textContent = on ? "Music On" : "Music Off";
+      chipDot.classList.toggle("playing", on);
+
+      musicFloatText.textContent = on ? "Pause Music" : "Play Music";
+      musicFloatDot.classList.toggle("playing", on);
+    }
+
     async function toggleMusic(){
       try{
         if(!playing){
           await audio.play();
           playing = true;
-          musicText.textContent = "Pause Music";
-          musicDot.classList.add("playing");
+          setMusicUI(true);
         }else{
           audio.pause();
           playing = false;
-          musicText.textContent = "Play Music";
-          musicDot.classList.remove("playing");
+          setMusicUI(false);
         }
       }catch{
-        musicText.textContent = "Tap to Play";
+        musicFloatText.textContent = "Tap to Play";
       }
     }
     musicBtn.addEventListener("click", toggleMusic);
+    setMusicUI(false);
 
     // ❄️ Snow
     const canvas = document.getElementById("snow");
