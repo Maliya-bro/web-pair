@@ -10,10 +10,9 @@
       --text: rgba(255,255,255,.94);
       --muted: rgba(255,255,255,.70);
       --glass: rgba(255,255,255,.10);
-      --glass2: rgba(0,0,0,.30);
-      --border: rgba(255,255,255,.16);
+      --glass2: rgba(0,0,0,.32);
+      --border: rgba(255,255,255,.18);
       --shadow: 0 22px 80px rgba(0,0,0,.55);
-
       --r: 22px;
 
       --blue1:#4ea6ff; --blue2:#8a5cff;
@@ -69,83 +68,9 @@
       z-index:5;
     }
 
-    /* =========================================================
-       ✅ Runner Border (tiny pen-line) — reusable for any box
-       ========================================================= */
-    .runnerBox{
-      position:relative;
-      border-radius:var(--rb, var(--r));
-    }
-
-    .runnerBox .runnerSVG{
-      position:absolute;
-      inset:-14px; /* space for glow */
-      width:calc(100% + 28px);
-      height:calc(100% + 28px);
-      pointer-events:none;
-      z-index:3;
-      opacity:1;
-      filter:
-        drop-shadow(0 0 10px rgba(255,0,120,.35))
-        drop-shadow(0 0 18px rgba(0,110,255,.22))
-        drop-shadow(0 0 26px rgba(255,200,0,.14));
-    }
-
-    .runnerBox .runnerPath{
-      fill:none;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    /* Tail = thinner + more transparent (pen tail) */
-    .runnerBox .tail{
-      stroke-width:2.6;
-      opacity:.40;
-      stroke-dasharray: 60 940;      /* tiny tail */
-      animation: dashMove var(--spd, 2.6s) linear infinite, colorCycle 6.5s linear infinite;
-      filter: blur(.2px);
-    }
-
-    /* Head = short + super highlight */
-    .runnerBox .head{
-      stroke-width:5.6;
-      opacity:1;
-      stroke-dasharray: 22 978;      /* tiny “pen” head */
-      animation: dashMove var(--spd, 2.6s) linear infinite, colorCycle 6.5s linear infinite;
-    }
-
-    /* extra glow copy (makes head pop) */
-    .runnerBox .headGlow{
-      stroke-width:8.6;
-      opacity:.22;
-      stroke-dasharray: 22 978;
-      animation: dashMove var(--spd, 2.6s) linear infinite, colorCycle 6.5s linear infinite;
-      filter: blur(1.4px);
-    }
-
-    @keyframes dashMove{
-      to { stroke-dashoffset: -1000; }
-    }
-
-    /* Color cycle order you asked */
-    @keyframes colorCycle{
-      0%   { stroke:#ff2d2d; }  /* රතු */
-      11%  { stroke:#ff3aa6; }  /* රෝස */
-      22%  { stroke:#ff8c2a; }  /* තැබිලි */
-      33%  { stroke:#ffb300; }  /* තද කහ */
-      44%  { stroke:#fff176; }  /* ලා කහ */
-      55%  { stroke:#9dff9d; }  /* ලා කොළ */
-      66%  { stroke:#00c853; }  /* තද කොළ */
-      77%  { stroke:#69d2ff; }  /* ලා නිල් */
-      88%  { stroke:#1e6bff; }  /* තද නිල් */
-      100% { stroke:#ff2d2d; }  /* රතු */
-    }
-
-    /* =========================================================
-       Main card
-       ========================================================= */
+    /* ✅ clean modern card */
     .card{
-      width:min(580px,100%);
+      width:min(560px,100%);
       background:var(--glass);
       border:1px solid var(--border);
       border-radius:var(--r);
@@ -153,18 +78,21 @@
       padding:26px 22px;
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-      overflow:hidden;
-      position:relative;
-      z-index:2;
     }
 
-    .header{ text-align:center; margin-bottom:14px; }
+    .header{
+      text-align:center;
+      display:grid;
+      gap:6px;
+      margin-bottom:14px;
+    }
     .title{
       font-weight:1000;
       letter-spacing:.8px;
       font-size:30px;
       text-shadow:0 10px 40px rgba(0,0,0,.55);
     }
+    .sub{font-size:13px;color:var(--muted)}
 
     .divider{
       height:1px;
@@ -208,6 +136,7 @@
       gap:12px;
       margin-top:16px;
     }
+
     .btn{
       border:none;
       padding:14px;
@@ -231,24 +160,22 @@
       opacity:.85;
       pointer-events:none;
     }
+
     .btn-pair{ background: linear-gradient(135deg, var(--blue1), var(--blue2)); }
-    .btn-qr  { background: linear-gradient(135deg, var(--green1), var(--green2)); }
+    .btn-qr  { background: linear-gradient(135deg, #2ecc71, #27ae60); }
     .btn-copy{
       background: linear-gradient(135deg, var(--orange1), var(--orange2));
       margin-top:12px;
       width:100%;
     }
 
-    /* Result box (now ALSO has runner border) */
-    .resultCard{
+    .resultbox{
       margin-top:16px;
       background:rgba(0,0,0,0.34);
       border:1px solid rgba(255,255,255,.12);
       border-radius:18px;
       padding:16px 14px;
       box-shadow:0 16px 55px rgba(0,0,0,.38);
-      position:relative;
-      z-index:2;
     }
 
     .result{
@@ -335,53 +262,33 @@
   <div class="bg-shine"></div>
 
   <div class="wrap">
-
-    <!-- MAIN CARD with runner -->
-    <div class="runnerBox" style="--rb: 22px; --spd: 2.6s;">
-      <svg class="runnerSVG" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <rect class="runnerPath tail"     x="4" y="4" width="92" height="92" rx="10" ry="10" pathLength="1000"></rect>
-        <rect class="runnerPath headGlow" x="4" y="4" width="92" height="92" rx="10" ry="10" pathLength="1000"></rect>
-        <rect class="runnerPath head"     x="4" y="4" width="92" height="92" rx="10" ry="10" pathLength="1000"></rect>
-      </svg>
-
-      <div class="card">
-        <div class="header">
-          <div class="title">MALIYA-MD</div>
-        </div>
-
-        <div class="divider"></div>
-
-        <label for="number">WhatsApp Number</label>
-        <input id="number" class="input" type="tel" inputmode="numeric" placeholder="94701234567" autocomplete="off" />
-        <div class="hint">✅ Country code එක්ක. spaces / + / - නැතුව.</div>
-
-        <div class="btns">
-          <button class="btn btn-pair" id="btnPair">🔑 Generate Pair</button>
-          <button class="btn btn-qr" id="btnQR">📷 Generate QR</button>
-        </div>
-
-        <button class="btn btn-copy" id="btnCopy">📋 Copy Result</button>
-
-        <!-- RESULT BOX: NOW ALSO WITH THE SAME runner -->
-        <div class="runnerBox" style="--rb: 18px; --spd: 2.2s; margin-top:16px;">
-          <svg class="runnerSVG" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <rect class="runnerPath tail"     x="6" y="6" width="88" height="88" rx="10" ry="10" pathLength="1000"></rect>
-            <rect class="runnerPath headGlow" x="6" y="6" width="88" height="88" rx="10" ry="10" pathLength="1000"></rect>
-            <rect class="runnerPath head"     x="6" y="6" width="88" height="88" rx="10" ry="10" pathLength="1000"></rect>
-          </svg>
-
-          <div class="resultCard" style="border-radius:18px;">
-            <div class="result fade-in" id="result">—</div>
-          </div>
-        </div>
-
-        <div class="footer">© MALIYA-MD</div>
+    <div class="card">
+      <div class="header">
+        <div class="title">MALIYA-MD</div>
+        <div class="sub">Generate Pair Code or QR</div>
       </div>
-    </div>
 
+      <div class="divider"></div>
+
+      <label for="number">WhatsApp Number</label>
+      <input id="number" class="input" type="tel" inputmode="numeric" placeholder="94701234567" autocomplete="off" />
+      <div class="hint">✅ Country code එක්ක. spaces / + / - නැතුව.</div>
+
+      <div class="btns">
+        <button class="btn btn-pair" id="btnPair">🔑 Generate Pair</button>
+        <button class="btn btn-qr" id="btnQR">📷 Generate QR</button>
+      </div>
+
+      <button class="btn btn-copy" id="btnCopy">📋 Copy Result</button>
+
+      <div class="resultbox">
+        <div class="result fade-in" id="result">—</div>
+      </div>
+
+      <div class="footer">© MALIYA-MD</div>
+    </div>
   </div>
 
-  <!-- 🎵 Song -->
   <audio id="bgMusic" preload="auto" loop>
     <source src="song.mp3" type="audio/mpeg" />
   </audio>
@@ -449,7 +356,7 @@
       }
     });
 
-    // QR (backend: /qr/data -> { qr: "data:image/png;base64,..." })
+    // QR
     btnQR.addEventListener("click", async () => {
       const num = clean(numberEl.value);
       if(!num) return showAnimatedText("❌ Enter number");
@@ -545,4 +452,4 @@
     drawSnow();
   </script>
 </body>
-  </html>
+                                           </html>
