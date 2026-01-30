@@ -17,9 +17,6 @@
       --blue1:#4ea6ff; --blue2:#8a5cff;
       --green1:#2ecc71; --green2:#27ae60;
       --orange1:#ffb347; --orange2:#ff6b6b;
-
-      /* 🔴 only border line color */
-      --line:#ff2d2d;
     }
 
     *{margin:0;padding:0;box-sizing:border-box}
@@ -71,9 +68,10 @@
     }
 
     /* ===========================================================
-       ✅ BORDER LINE LIKE YOUR IMAGE (single moving segment)
-       - Only on BIG box (card) and SMALL result box
-       - No red/pink inside box
+       ✅ FULL BORDER RUNNER (goes around ALL sides)
+       ✅ Head strong + tail fades + tail becomes thinner
+       ✅ Colors cycle: red → pink → orange → deep yellow → light yellow
+                   → light green → deep green → light blue → deep blue → red
        =========================================================== */
 
     /* BIG BOX */
@@ -90,60 +88,89 @@
       border:1px solid rgba(255,255,255,.18);
     }
 
-    /* moving line strip */
+    /* border runner layer (only draws on edge) */
     .card .border-run{
       position:absolute;
       inset:0;
       border-radius:inherit;
       pointer-events:none;
       z-index:0;
+
+      /* The trick: conic gradient with a long tail that fades out */
+      background:
+        conic-gradient(
+          from 0deg,
+
+          /* head */
+          rgba(255,45,45,1) 0deg,
+          rgba(255,0,122,1) 25deg,
+          rgba(255,159,67,1) 50deg,
+          rgba(255,193,7,1) 75deg,
+          rgba(255,235,59,1) 95deg,
+          rgba(144,238,144,1) 120deg,
+          rgba(0,200,83,1) 145deg,
+          rgba(76,175,255,1) 170deg,
+          rgba(0,102,255,1) 195deg,
+          rgba(255,45,45,1) 220deg,
+
+          /* tail fade (same hue range but alpha fades to 0) */
+          rgba(255,45,45,0.60) 240deg,
+          rgba(255,0,122,0.45) 255deg,
+          rgba(255,159,67,0.32) 270deg,
+          rgba(255,193,7,0.22) 285deg,
+          rgba(255,235,59,0.14) 300deg,
+          rgba(144,238,144,0.09) 315deg,
+          rgba(0,200,83,0.06) 330deg,
+          rgba(76,175,255,0.04) 345deg,
+          rgba(0,102,255,0.02) 355deg,
+          transparent 360deg
+        );
+
+      /* only keep border ring (mask center) */
+      -webkit-mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
+              mask:
+        radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
+
+      animation: spin 2.2s linear infinite;
+      filter: drop-shadow(0 0 14px rgba(255,45,45,.30));
     }
 
-    /* horizontal segment */
-    .card .border-run::before{
-      content:"";
-      position:absolute;
-      left:18px;
-      bottom:0px;
-      height:4px;
-      width:140px;                 /* length of the line */
-      background:var(--line);
-      border-radius:999px;
-      filter: drop-shadow(0 0 10px rgba(255,45,45,.65));
-      animation: runBottom 2.2s linear infinite;
-    }
-
-    /* vertical segment */
+    /* Extra: thickness taper illusion with second masked layer */
     .card .border-run::after{
       content:"";
       position:absolute;
-      right:0px;
-      top:18px;
-      width:4px;
-      height:140px;                /* length of the line */
-      background:var(--line);
-      border-radius:999px;
-      filter: drop-shadow(0 0 10px rgba(255,45,45,.65));
-      animation: runRight 2.2s linear infinite;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(255,255,255,0.0) 0deg,
+          rgba(255,255,255,0.0) 200deg,
+          rgba(255,255,255,0.22) 220deg,
+          rgba(255,255,255,0.12) 250deg,
+          rgba(255,255,255,0.06) 280deg,
+          rgba(255,255,255,0.0) 320deg,
+          rgba(255,255,255,0.0) 360deg
+        );
+
+      /* thinner tail ring than head ring */
+      -webkit-mask:
+        radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+              mask:
+        radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+
+      animation: spin 2.2s linear infinite;
+      mix-blend-mode: overlay;
+      opacity: .55;
     }
 
-    /* move like the example (bottom line slides L->R and right line slides T->B) */
-    @keyframes runBottom{
-      0%   { transform: translateX(-60%); opacity:.0; }
-      10%  { opacity:1; }
-      50%  { transform: translateX(250%); opacity:1; }
-      70%  { opacity:1; }
-      100% { transform: translateX(420%); opacity:0; }
-    }
-    @keyframes runRight{
-      0%   { transform: translateY(-60%); opacity:.0; }
-      10%  { opacity:1; }
-      50%  { transform: translateY(250%); opacity:1; }
-      70%  { opacity:1; }
-      100% { transform: translateY(420%); opacity:0; }
+    @keyframes spin{
+      to{ transform: rotate(360deg); }
     }
 
-    /* content on top */
     .content{ position:relative; z-index:2; }
 
     /* =========================================================== */
@@ -233,14 +260,14 @@
     .btn:active{transform:translateY(0px) scale(.98)}
 
     .btn-pair{background:linear-gradient(135deg,var(--blue1),var(--blue2))}
-    .btn-qr{background:linear-gradient(135deg,var(--green1),var(--green2))}
+    .btn-qr{background:linear-gradient(135deg,#2ecc71,#27ae60)}
     .btn-copy{
       background:linear-gradient(135deg,var(--orange1),var(--orange2));
       margin-top:12px;
       width:100%;
     }
 
-    /* ✅ Result box with SAME moving border line (no inside red) */
+    /* ✅ Result box: same full border runner, smaller */
     .result-shell{
       margin-top:16px;
       position:relative;
@@ -258,32 +285,39 @@
       border-radius:inherit;
       pointer-events:none;
       z-index:0;
-    }
 
-    .result-shell .border-run::before{
-      content:"";
-      position:absolute;
-      left:14px;
-      bottom:0px;
-      height:3px;
-      width:120px;
-      background:var(--line);
-      border-radius:999px;
-      filter: drop-shadow(0 0 10px rgba(255,45,45,.65));
-      animation: runBottom 2.0s linear infinite;
-    }
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(255,45,45,1) 0deg,
+          rgba(255,0,122,1) 25deg,
+          rgba(255,159,67,1) 50deg,
+          rgba(255,193,7,1) 75deg,
+          rgba(255,235,59,1) 95deg,
+          rgba(144,238,144,1) 120deg,
+          rgba(0,200,83,1) 145deg,
+          rgba(76,175,255,1) 170deg,
+          rgba(0,102,255,1) 195deg,
+          rgba(255,45,45,1) 220deg,
+          rgba(255,45,45,0.60) 240deg,
+          rgba(255,0,122,0.45) 255deg,
+          rgba(255,159,67,0.32) 270deg,
+          rgba(255,193,7,0.22) 285deg,
+          rgba(255,235,59,0.14) 300deg,
+          rgba(144,238,144,0.09) 315deg,
+          rgba(0,200,83,0.06) 330deg,
+          rgba(76,175,255,0.04) 345deg,
+          rgba(0,102,255,0.02) 355deg,
+          transparent 360deg
+        );
 
-    .result-shell .border-run::after{
-      content:"";
-      position:absolute;
-      right:0px;
-      top:14px;
-      width:3px;
-      height:120px;
-      background:var(--line);
-      border-radius:999px;
-      filter: drop-shadow(0 0 10px rgba(255,45,45,.65));
-      animation: runRight 2.0s linear infinite;
+      -webkit-mask:
+        radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0);
+              mask:
+        radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0);
+
+      animation: spin 2.0s linear infinite;
+      filter: drop-shadow(0 0 12px rgba(255,45,45,.25));
     }
 
     .result{
@@ -301,13 +335,12 @@
       white-space:pre-wrap;
     }
 
-    /* ✨ Text animation for generated code in result box */
+    /* ✨ text animation */
     .fade-in{ animation: fadeInUp .35s ease both; }
     @keyframes fadeInUp{
       from{opacity:0; transform: translateY(10px) scale(.98);}
       to{opacity:1; transform: translateY(0) scale(1);}
     }
-
     .type{
       display:inline-block;
       border-right: 2px solid rgba(255,255,255,.85);
@@ -377,7 +410,6 @@
 
   <div class="wrap">
     <div class="card">
-      <!-- moving border line element -->
       <div class="border-run"></div>
 
       <div class="content">
@@ -389,14 +421,7 @@
         <div class="divider"></div>
 
         <label for="number">WhatsApp Number</label>
-        <input
-          id="number"
-          class="input"
-          type="tel"
-          inputmode="numeric"
-          placeholder="94701234567"
-          autocomplete="off"
-        />
+        <input id="number" class="input" type="tel" inputmode="numeric" placeholder="94701234567" autocomplete="off" />
         <div class="hint">✅ Country code එක්ක. spaces / + / - නැතුව.</div>
 
         <div class="btns">
@@ -442,7 +467,6 @@
 
     function clean(n){ return (n||"").replace(/[^\d]/g,""); }
 
-    // ✅ animated text show (fade + type effect)
     async function showAnimatedText(text){
       resultEl.classList.remove("fade-in");
       void resultEl.offsetWidth;
@@ -595,4 +619,4 @@
     drawSnow();
   </script>
 </body>
-  </html>
+          </html>
