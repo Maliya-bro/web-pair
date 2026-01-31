@@ -1,6 +1,7 @@
 import express from "express";
 import fs from "fs";
 import pino from "pino";
+import qrcode from "qrcode";
 import {
   makeWASocket,
   useMultiFileAuthState,
@@ -8,26 +9,22 @@ import {
   makeCacheableSignalKeyStore,
   Browsers,
   jidNormalizedUser,
-  fetchLatestBaileysVersion,
+  fetchLatestBaileysVersion
 } from "@whiskeysockets/baileys";
-import pn from "awesome-phonenumber";
-import qrcode from "qrcode";
 import { upload } from "./mega.js";
 
 const router = express.Router();
 
-function removeFile(p) {
-  try {
-    if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
-  } catch {}
+/**
+ * ✅ one socket per number
+ */
+const ACTIVE = new Map(); // num -> { sock, dir, timer, responded }
+
+function rm(p) {
+  try { fs.existsSync(p) && fs.rmSync(p, { recursive: true, force: true }); } catch {}
 }
 
-function getMegaFileId(url) {
-  const m = url?.match(/\/file\/([^#]+#[^\/]+)/);
-  return m ? m[1] : null;
-}
-
-async function waitForFile(filePath, timeoutMs = 20000) {
+async function waitFile(filePath, timeoutMs = 30000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     if (fs.existsSync(filePath)) return true;
@@ -36,117 +33,114 @@ async function waitForFile(filePath, timeoutMs = 20000) {
   return false;
 }
 
+async function cleanup(num, reason = "") {
+  const cur = ACTIVE.get(num);
+  if (!cur) return;
+
+  ACTIVE.delete(num);
+  try { clearTimeout(cur.timer); } catch {}
+  try { await cur.sock?.end?.(); } catch {}
+
+  await delay(2500);
+  rm(cur.dir);
+
+  if (reason) console.log("🧹 cleaned", num, reason);
+}
+
 /**
- * ✅ Endpoint for UI:
  * GET /qr/data?number=947xxxxxxxx
- * returns: { qr: "data:image/png;base64,...." }
+ * returns { qr: "data:image/png;base64,..." }
  */
 router.get("/data", async (req, res) => {
-  let num = String(req.query.number || "").replace(/[^\d]/g, "");
-  if (!num) return res.status(400).json({ error: "Missing number" });
+  let num = String(req.query.number || "").replace(/\D/g, "");
 
-  const phone = pn("+" + num);
-  if (!phone.isValid()) return res.status(400).json({ error: "Invalid phone number" });
+  if (num.length < 10 || num.length > 15) {
+    return res.status(400).json({ error: "Invalid number" });
+  }
 
-  num = phone.getNumber("e164").replace("+", "");
-  const sessionDir = "./" + num;
+  const dir = "./session_" + num;
 
-  // clean old
-  removeFile(sessionDir);
+  if (ACTIVE.has(num)) await cleanup(num, "restart");
+  rm(dir);
 
-  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+  const { state, saveCreds } = await useMultiFileAuthState(dir);
   const { version } = await fetchLatestBaileysVersion();
 
   const sock = makeWASocket({
     version,
     auth: {
       creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })),
+      keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }))
     },
     logger: pino({ level: "fatal" }),
     browser: Browsers.windows("Chrome"),
     printQRInTerminal: false,
+    keepAliveIntervalMs: 20000,
+    connectTimeoutMs: 60000
   });
-
-  let sentQr = false;
-  let handledOpen = false;
 
   sock.ev.on("creds.update", async () => {
     try { await saveCreds(); } catch {}
   });
 
+  // ✅ timeout 90s
+  const timer = setTimeout(() => {
+    // if QR not returned in time
+    try { res.status(504).json({ error: "QR timeout. Try again." }); } catch {}
+    cleanup(num, "timeout-90s");
+  }, 90000);
+
+  ACTIVE.set(num, { sock, dir, timer, responded: false });
+
+  let handled = false;
+
   sock.ev.on("connection.update", async (u) => {
     try {
-      // ✅ Send QR to frontend (first time only)
-      if (u.qr && !sentQr) {
-        sentQr = true;
-        const dataUrl = await qrcode.toDataURL(u.qr, { margin: 1, scale: 8 });
-        return res.json({ qr: dataUrl });
+      if (u.connection) console.log("🔌", num, "connection:", u.connection);
+
+      // ✅ send QR once
+      const cur = ACTIVE.get(num);
+      if (u.qr && cur && !cur.responded) {
+        cur.responded = true;
+        const img = await qrcode.toDataURL(u.qr, { margin: 1, scale: 8 });
+        return res.json({ qr: img });
       }
 
-      // ✅ After scan + link (open)
-      if (u.connection === "open" && !handledOpen) {
-        handledOpen = true;
+      // ✅ finalize open + registered
+      if (!handled && u.connection === "open" && sock.authState?.creds?.registered) {
+        handled = true;
+        console.log("✅", num, "linked by QR (open + registered)");
 
-        // force save
+        // wait WhatsApp finalize
+        await delay(30000);
+
         try { await saveCreds(); } catch {}
+        const credsPath = dir + "/creds.json";
 
-        const credsPath = sessionDir + "/creds.json";
-
-        // wait file exists (deploy fix)
-        const ok = await waitForFile(credsPath, 20000);
-        if (!ok) {
-          console.error("❌ creds.json not found in time:", credsPath);
-          try { await sock.end(); } catch {}
-          removeFile(sessionDir);
-          return;
+        const ok = await waitFile(credsPath, 30000);
+        if (ok) {
+          try {
+            const url = await upload(credsPath, `creds_${num}_${Date.now()}.json`);
+            await sock.sendMessage(jidNormalizedUser(num + "@s.whatsapp.net"), { text: url });
+            console.log("📨 inbox sent");
+          } catch (e) {
+            console.log("❌ upload/send error:", e?.message || e);
+          }
+        } else {
+          console.log("❌ creds.json missing");
         }
 
-        // upload
-        let megaUrl;
-        try {
-          megaUrl = await upload(credsPath, `creds_${num}_${Date.now()}.json`);
-        } catch (e) {
-          console.error("❌ MEGA upload failed:", e?.message || e);
-          try { await sock.end(); } catch {}
-          removeFile(sessionDir);
-          return;
-        }
-
-        const fileId = getMegaFileId(megaUrl);
-
-        // send to inbox
-        try {
-          await sock.sendMessage(
-            jidNormalizedUser(num + "@s.whatsapp.net"),
-            { text: fileId || megaUrl }
-          );
-        } catch (e) {
-          console.error("❌ sendMessage failed:", e?.message || e);
-        }
-
-        await delay(1200);
-        try { await sock.end(); } catch {}
-        removeFile(sessionDir);
+        await cleanup(num, "done");
+        return;
       }
 
       if (u.connection === "close") {
-        await delay(300);
-        removeFile(sessionDir);
+        console.log("⚠️ close ignored (waiting until timeout/open)");
       }
     } catch (e) {
-      console.error("❌ connection.update error:", e?.message || e);
+      console.log("❌ connection.update error:", e?.message || e);
     }
   });
-
-  // safety: if QR not produced fast, reply
-  setTimeout(() => {
-    if (!sentQr) {
-      try { res.status(504).json({ error: "QR timeout. Try again." }); } catch {}
-      try { sock.end(); } catch {}
-      removeFile(sessionDir);
-    }
-  }, 25000);
 });
 
 export default router;
