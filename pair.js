@@ -10,45 +10,57 @@ import {
   jidNormalizedUser,
   fetchLatestBaileysVersion
 } from "@whiskeysockets/baileys";
-import pn from "awesome-phonenumber";
 import { upload } from "./mega.js";
 
 const router = express.Router();
-const ACTIVE = new Map(); // one socket per number
+
+/**
+ * ✅ One active socket per number
+ * prevents conflicts + "Logging in..." stuck
+ */
+const ACTIVE = new Map(); // num -> { sock, dir, timer }
 
 function rm(p) {
-  try { fs.existsSync(p) && fs.rmSync(p, { recursive: true, force: true }); } catch {}
+  try {
+    if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
+  } catch {}
 }
 
-async function cleanup(num) {
-  const cur = ACTIVE.get(num);
-  if (!cur) return;
-  ACTIVE.delete(num);
-  try { await cur.sock.end(); } catch {}
-  await delay(1500);
-  rm(cur.dir);
-}
-
-async function waitFile(f, t = 30000) {
-  const s = Date.now();
-  while (Date.now() - s < t) {
-    if (fs.existsSync(f)) return true;
+async function waitFile(filePath, timeoutMs = 30000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (fs.existsSync(filePath)) return true;
     await delay(300);
   }
   return false;
 }
 
+async function cleanup(num, reason = "") {
+  const cur = ACTIVE.get(num);
+  if (!cur) return;
+
+  ACTIVE.delete(num);
+  try { clearTimeout(cur.timer); } catch {}
+  try { await cur.sock?.end?.(); } catch {}
+
+  // ✅ don't delete instantly
+  await delay(2500);
+  rm(cur.dir);
+
+  if (reason) console.log("🧹 cleaned", num, reason);
+}
+
 router.get("/", async (req, res) => {
+  // ✅ stable validation (no phone lib)
   let num = String(req.query.number || "").replace(/\D/g, "");
-  if (!num) return res.json({ code: "Invalid number" });
+  if (num.length < 10 || num.length > 15) {
+    return res.status(400).json({ code: "Invalid number" });
+  }
 
-  const phone = pn("+" + num);
-  if (!phone.isValid()) return res.json({ code: "Invalid number" });
-
-  num = phone.getNumber("e164").replace("+", "");
   const dir = "./session_" + num;
 
-  if (ACTIVE.has(num)) await cleanup(num);
+  // ✅ stop previous socket for same number
+  if (ACTIVE.has(num)) await cleanup(num, "restart");
   rm(dir);
 
   const { state, saveCreds } = await useMultiFileAuthState(dir);
@@ -61,33 +73,78 @@ router.get("/", async (req, res) => {
       keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }))
     },
     logger: pino({ level: "fatal" }),
-    browser: Browsers.windows("Chrome")
+    browser: Browsers.windows("Chrome"),
+
+    // ✅ stability
+    keepAliveIntervalMs: 20000,
+    connectTimeoutMs: 60000
   });
 
-  ACTIVE.set(num, { sock, dir });
+  sock.ev.on("creds.update", async () => {
+    try { await saveCreds(); } catch {}
+  });
 
-  sock.ev.on("creds.update", saveCreds);
+  // ✅ cleanup if user doesn't complete linking within 30s
+  const timer = setTimeout(() => cleanup(num, "timeout-30s"), 30000);
+  ACTIVE.set(num, { sock, dir, timer });
 
-  sock.ev.on("connection.update", async () => {
-    if (sock.authState.creds.registered) {
-      await saveCreds();
-      const creds = dir + "/creds.json";
-      if (await waitFile(creds)) {
+  let handled = false;
+
+  sock.ev.on("connection.update", async (u) => {
+    try {
+      if (u.connection) console.log("🔌", num, "connection:", u.connection);
+
+      // ✅ finalize only when open + registered
+      if (!handled && u.connection === "open" && sock.authState?.creds?.registered) {
+        handled = true;
+        console.log("✅", num, "linked (open + registered)");
+
+        // ✅ IMPORTANT: wait 30s so WhatsApp finishes "Logging in..."
+        await delay(30000);
+
+        try { await saveCreds(); } catch {}
+        const credsPath = dir + "/creds.json";
+
+        const ok = await waitFile(credsPath, 30000);
+        if (!ok) {
+          console.log("❌", num, "creds.json not found in time");
+          await cleanup(num, "no-creds");
+          return;
+        }
+
+        // ✅ upload + send inbox
         try {
-          const url = await upload(creds, `creds_${num}.json`);
-          await sock.sendMessage(jidNormalizedUser(num + "@s.whatsapp.net"), {
-            text: url
-          });
-        } catch {}
+          const url = await upload(credsPath, `creds_${num}_${Date.now()}.json`);
+          await sock.sendMessage(jidNormalizedUser(num + "@s.whatsapp.net"), { text: url });
+          console.log("📨", num, "sent inbox message");
+        } catch (e) {
+          console.log("❌ upload/send error:", e?.message || e);
+        }
+
+        await cleanup(num, "done");
+        return;
       }
-      await cleanup(num);
+
+      if (u.connection === "close") {
+        // don't nuke immediately
+        await delay(2500);
+        await cleanup(num, "closed");
+      }
+    } catch (e) {
+      console.log("❌ connection.update error:", e?.message || e);
     }
   });
 
-  await delay(1200);
-  const raw = await sock.requestPairingCode(num);
-  const code = raw.match(/.{1,4}/g).join("-");
-  res.json({ code });
+  // ✅ generate pairing code and return fast
+  try {
+    await delay(1200);
+    const raw = await sock.requestPairingCode(num);
+    const code = raw.match(/.{1,4}/g).join("-");
+    return res.json({ code });
+  } catch (e) {
+    await cleanup(num, "pairing-code-failed");
+    return res.status(500).json({ code: "Pairing code failed" });
+  }
 });
 
 export default router;
