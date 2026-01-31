@@ -15,15 +15,12 @@ import { upload } from "./mega.js";
 const router = express.Router();
 
 /**
- * ✅ One active socket per number
- * prevents conflicts + "Logging in..." stuck
+ * ✅ one socket per number
  */
 const ACTIVE = new Map(); // num -> { sock, dir, timer }
 
 function rm(p) {
-  try {
-    if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
-  } catch {}
+  try { fs.existsSync(p) && fs.rmSync(p, { recursive: true, force: true }); } catch {}
 }
 
 async function waitFile(filePath, timeoutMs = 30000) {
@@ -43,7 +40,7 @@ async function cleanup(num, reason = "") {
   try { clearTimeout(cur.timer); } catch {}
   try { await cur.sock?.end?.(); } catch {}
 
-  // ✅ don't delete instantly
+  // ✅ don’t delete instantly
   await delay(2500);
   rm(cur.dir);
 
@@ -51,15 +48,16 @@ async function cleanup(num, reason = "") {
 }
 
 router.get("/", async (req, res) => {
-  // ✅ stable validation (no phone lib)
   let num = String(req.query.number || "").replace(/\D/g, "");
+
+  // ✅ simple validation
   if (num.length < 10 || num.length > 15) {
     return res.status(400).json({ code: "Invalid number" });
   }
 
   const dir = "./session_" + num;
 
-  // ✅ stop previous socket for same number
+  // close old
   if (ACTIVE.has(num)) await cleanup(num, "restart");
   rm(dir);
 
@@ -74,8 +72,6 @@ router.get("/", async (req, res) => {
     },
     logger: pino({ level: "fatal" }),
     browser: Browsers.windows("Chrome"),
-
-    // ✅ stability
     keepAliveIntervalMs: 20000,
     connectTimeoutMs: 60000
   });
@@ -84,8 +80,8 @@ router.get("/", async (req, res) => {
     try { await saveCreds(); } catch {}
   });
 
-  // ✅ cleanup if user doesn't complete linking within 30s
-  const timer = setTimeout(() => cleanup(num, "timeout-30s"), 30000);
+  // ✅ timeout 90s (NOT 30s)
+  const timer = setTimeout(() => cleanup(num, "timeout-90s"), 90000);
   ACTIVE.set(num, { sock, dir, timer });
 
   let handled = false;
@@ -99,7 +95,7 @@ router.get("/", async (req, res) => {
         handled = true;
         console.log("✅", num, "linked (open + registered)");
 
-        // ✅ IMPORTANT: wait 30s so WhatsApp finishes "Logging in..."
+        // ✅ wait WhatsApp finalize (fix logging in)
         await delay(30000);
 
         try { await saveCreds(); } catch {}
@@ -107,16 +103,15 @@ router.get("/", async (req, res) => {
 
         const ok = await waitFile(credsPath, 30000);
         if (!ok) {
-          console.log("❌", num, "creds.json not found in time");
+          console.log("❌ creds.json missing");
           await cleanup(num, "no-creds");
           return;
         }
 
-        // ✅ upload + send inbox
         try {
           const url = await upload(credsPath, `creds_${num}_${Date.now()}.json`);
           await sock.sendMessage(jidNormalizedUser(num + "@s.whatsapp.net"), { text: url });
-          console.log("📨", num, "sent inbox message");
+          console.log("📨 inbox sent");
         } catch (e) {
           console.log("❌ upload/send error:", e?.message || e);
         }
@@ -125,17 +120,16 @@ router.get("/", async (req, res) => {
         return;
       }
 
+      // ❌ ignore close early (don’t cleanup)
       if (u.connection === "close") {
-        // don't nuke immediately
-        await delay(2500);
-        await cleanup(num, "closed");
+        console.log("⚠️ close ignored (waiting until timeout/open)");
       }
     } catch (e) {
       console.log("❌ connection.update error:", e?.message || e);
     }
   });
 
-  // ✅ generate pairing code and return fast
+  // ✅ generate pairing code
   try {
     await delay(1200);
     const raw = await sock.requestPairingCode(num);
