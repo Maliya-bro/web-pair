@@ -8,127 +8,86 @@ import {
   makeCacheableSignalKeyStore,
   Browsers,
   jidNormalizedUser,
-  fetchLatestBaileysVersion,
+  fetchLatestBaileysVersion
 } from "@whiskeysockets/baileys";
 import pn from "awesome-phonenumber";
 import { upload } from "./mega.js";
 
 const router = express.Router();
+const ACTIVE = new Map(); // one socket per number
 
-function removeFile(p) {
-  try {
-    if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
-  } catch {}
+function rm(p) {
+  try { fs.existsSync(p) && fs.rmSync(p, { recursive: true, force: true }); } catch {}
 }
 
-function getMegaFileId(url) {
-  const m = url?.match(/\/file\/([^#]+#[^\/]+)/);
-  return m ? m[1] : null;
+async function cleanup(num) {
+  const cur = ACTIVE.get(num);
+  if (!cur) return;
+  ACTIVE.delete(num);
+  try { await cur.sock.end(); } catch {}
+  await delay(1500);
+  rm(cur.dir);
 }
 
-async function waitForFile(filePath, timeoutMs = 20000) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    if (fs.existsSync(filePath)) return true;
+async function waitFile(f, t = 30000) {
+  const s = Date.now();
+  while (Date.now() - s < t) {
+    if (fs.existsSync(f)) return true;
     await delay(300);
   }
   return false;
 }
 
-async function waitUntilRegistered(sock, timeoutMs = 60000) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    if (sock?.authState?.creds?.registered) return true;
-    await delay(500);
-  }
-  return false;
-}
-
 router.get("/", async (req, res) => {
-  let num = String(req.query.number || "").replace(/[^\d]/g, "");
-  if (!num) return res.status(400).json({ code: "Missing number" });
+  let num = String(req.query.number || "").replace(/\D/g, "");
+  if (!num) return res.json({ code: "Invalid number" });
 
   const phone = pn("+" + num);
-  if (!phone.isValid()) return res.status(400).json({ code: "Invalid phone number" });
+  if (!phone.isValid()) return res.json({ code: "Invalid number" });
 
   num = phone.getNumber("e164").replace("+", "");
-  const sessionDir = "./" + num;
+  const dir = "./session_" + num;
 
-  // ✅ clean old
-  removeFile(sessionDir);
+  if (ACTIVE.has(num)) await cleanup(num);
+  rm(dir);
 
-  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+  const { state, saveCreds } = await useMultiFileAuthState(dir);
   const { version } = await fetchLatestBaileysVersion();
 
   const sock = makeWASocket({
     version,
     auth: {
       creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })),
+      keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }))
     },
     logger: pino({ level: "fatal" }),
-    browser: Browsers.windows("Chrome"),
-    printQRInTerminal: false,
+    browser: Browsers.windows("Chrome")
   });
 
-  sock.ev.on("creds.update", async () => {
-    try { await saveCreds(); } catch {}
-  });
+  ACTIVE.set(num, { sock, dir });
 
-  // ✅ Pair code generate
-  if (!sock.authState.creds.registered) {
-    await delay(1200);
-    const codeRaw = await sock.requestPairingCode(num);
-    const code = codeRaw.match(/.{1,4}/g).join("-");
+  sock.ev.on("creds.update", saveCreds);
 
-    // ✅ IMPORTANT: respond immediately (UI shows code)
-    res.json({ code });
-
-    // ✅ Now WAIT until user finishes pairing (fix for "Logging in" stuck)
-    const okReg = await waitUntilRegistered(sock, 70000);
-    if (!okReg) {
-      console.error("❌ Pairing timeout (still not registered)");
-      try { await sock.end(); } catch {}
-      removeFile(sessionDir);
-      return;
-    }
-
-    // ✅ make sure creds saved + file exists
-    try { await saveCreds(); } catch {}
-    const credsPath = sessionDir + "/creds.json";
-    const okFile = await waitForFile(credsPath, 20000);
-    if (!okFile) {
-      console.error("❌ creds.json not found in time");
-      try { await sock.end(); } catch {}
-      removeFile(sessionDir);
-      return;
-    }
-
-    // ✅ upload + send to inbox
-    try {
-      const megaUrl = await upload(credsPath, `creds_${num}_${Date.now()}.json`);
-      const fileId = getMegaFileId(megaUrl);
-
-      try {
-        await sock.sendMessage(
-          jidNormalizedUser(num + "@s.whatsapp.net"),
-          { text: fileId || megaUrl }
-        );
-      } catch (e) {
-        console.error("❌ sendMessage failed:", e?.message || e);
+  sock.ev.on("connection.update", async () => {
+    if (sock.authState.creds.registered) {
+      await saveCreds();
+      const creds = dir + "/creds.json";
+      if (await waitFile(creds)) {
+        try {
+          const url = await upload(creds, `creds_${num}.json`);
+          await sock.sendMessage(jidNormalizedUser(num + "@s.whatsapp.net"), {
+            text: url
+          });
+        } catch {}
       }
-    } catch (e) {
-      console.error("❌ MEGA upload failed:", e?.message || e);
+      await cleanup(num);
     }
+  });
 
-    // ✅ cleanup (after everything)
-    await delay(1500);
-    try { await sock.end(); } catch {}
-    removeFile(sessionDir);
-    return;
-  }
-
-  return res.json({ code: "Already registered" });
+  await delay(1200);
+  const raw = await sock.requestPairingCode(num);
+  const code = raw.match(/.{1,4}/g).join("-");
+  res.json({ code });
 });
 
 export default router;
