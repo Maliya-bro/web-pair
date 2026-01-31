@@ -1,21 +1,29 @@
 import express from "express";
 import bodyParser from "body-parser";
-import path from "path";
 import { fileURLToPath } from "url";
+import path from "path";
+
+import pairRouter from "./pair.js";
+import qrRouter from "./qr.js";
 
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Replit deployments use env PORT
+// ✅ Deploy-safe PORT (fallback 5000)
 const PORT = process.env.PORT || 5000;
+
+// ✅ Increase event listeners limit (avoid warnings/crash)
+import("events").then((events) => {
+  events.EventEmitter.defaultMaxListeners = 500;
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
-// ✅ health check
+// ✅ Health check endpoints (for Replit/Deploy)
 app.get(["/health", "/_health", "/ping"], (req, res) => {
   res.status(200).type("text/plain").send("OK");
 });
@@ -25,29 +33,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "pair.html"));
 });
 
-// Pair route (lazy import)
-app.use("/pair", async (req, res, next) => {
-  try {
-    const mod = await import("./pair.js");
-    return mod.default(req, res, next);
-  } catch (e) {
-    console.error("❌ pair router load error:", e?.message || e);
-    return res.status(503).send("Service Unavailable");
-  }
-});
+// Routers
+app.use("/pair", pairRouter);
+app.use("/qr", qrRouter);
 
-// QR route (lazy import)
-app.use("/qr", async (req, res, next) => {
-  try {
-    const mod = await import("./qr.js");
-    return mod.default(req, res, next);
-  } catch (e) {
-    console.error("❌ qr router load error:", e?.message || e);
-    return res.status(503).send("Service Unavailable");
-  }
-});
-
-// ✅ bind
+// ✅ Bind 0.0.0.0 :5000
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
 });
