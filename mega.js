@@ -1,83 +1,53 @@
-
-import * as mega from "megajs";
 import fs from "fs";
+import * as mega from "megajs";
 
-// Mega authentication credentials
-const auth = {
-    email: "sithmikavihara801@gmail.com", // your mega account login email
-    password: "@@@iron. spider*man", // your mega account login password
-    userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
-};
+// =======================
+// ✅ OPTION 1 (Hardcode)
+// =======================
+// ⚠️ IMPORTANT: Repo PUBLIC නම් මෙක දාන්න එපා!
+// Mega account details
+const HARD_EMAIL = "sithmikavihara801@gmail.com";
+const HARD_PASSWORD = "@@@iron. spider*man";
 
-export const upload = (filePath, fileName) => {
-    return new Promise((resolve, reject) => {
-        try {
-            const storage = new mega.Storage(auth, (err) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+// =======================
+// ✅ OPTION 2 (Env override)
+// If secrets exist, they will override hardcoded values
+// =======================
+const email = process.env.MEGA_EMAIL || HARD_EMAIL;
+const password = process.env.MEGA_PASSWORD || HARD_PASSWORD;
 
-                const readStream = fs.createReadStream(filePath);
+if (!email || !password || email.includes("YOUR_MEGA_EMAIL") || password.includes("YOUR_MEGA_PASSWORD")) {
+  console.error("❌ MEGA credentials not set. Edit mega.js OR set MEGA_EMAIL/MEGA_PASSWORD");
+}
 
-                const uploadStream = storage.upload({
-                    name: fileName,
-                    allowUploadBuffering: true,
-                });
+export async function upload(filePath, name = "creds.json") {
+  return new Promise((resolve, reject) => {
+    try {
+      if (!fs.existsSync(filePath)) return reject(new Error("File not found: " + filePath));
 
-                readStream.pipe(uploadStream);
+      // login
+      const storage = mega({
+        email,
+        password,
+        // userAgent helps some hosted envs
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+      });
 
-                uploadStream.on("complete", (file) => {
-                    file.link((err, url) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            storage.close();
-                            resolve(url);
-                        }
-                    });
-                });
+      storage.ready
+        .then(() => {
+          const up = storage.upload({ name });
 
-                uploadStream.on("error", (error) => {
-                    reject(error);
-                });
-
-                readStream.on("error", (error) => {
-                    reject(error);
-                });
-            });
-
-            storage.on("error", (error) => {
-                reject(error);
-            });
-        } catch (err) {
-            reject(err);
-        }
-    });
-};
-
-export const download = (url) => {
-    return new Promise((resolve, reject) => {
-        try {
-            const file = mega.File.fromURL(url);
-
-            file.loadAttributes((err) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                file.downloadBuffer((err, buffer) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(buffer);
-                    }
-                });
-            });
-        } catch (err) {
-            reject(err);
-        }
-    });
-};
+          fs.createReadStream(filePath)
+            .pipe(up)
+            .on("complete", (file) => {
+              // file.link returns share link
+              resolve(file.link);
+            })
+            .on("error", (err) => reject(err));
+        })
+        .catch((err) => reject(err));
+    } catch (e) {
+      reject(e);
+    }
+  });
+              }
