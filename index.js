@@ -8,33 +8,24 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Replit Deployments වල PORT env එක අනිවාර්යයි
-// fallback 5000 (local run වලට)
+// ✅ Replit deployments use env PORT
 const PORT = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
-/**
- * ✅ Health Check Routes
- * Replit deploy health check fail වෙන එක avoid වෙනවා
- */
+// ✅ health check
 app.get(["/health", "/_health", "/ping"], (req, res) => {
   res.status(200).type("text/plain").send("OK");
 });
 
-/**
- * ✅ Main UI
- */
+// UI
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "pair.html"));
 });
 
-/**
- * ✅ Pair router
- * /pair?number=947xxxxxxx
- */
+// Pair route (lazy import)
 app.use("/pair", async (req, res, next) => {
   try {
     const mod = await import("./pair.js");
@@ -45,10 +36,7 @@ app.use("/pair", async (req, res, next) => {
   }
 });
 
-/**
- * ✅ QR router
- * /qr/data?number=947xxxxxxx
- */
+// QR route (lazy import)
 app.use("/qr", async (req, res, next) => {
   try {
     const mod = await import("./qr.js");
@@ -59,9 +47,7 @@ app.use("/qr", async (req, res, next) => {
   }
 });
 
-/**
- * ✅ IMPORTANT: bind 0.0.0.0 for Replit
- */
+// ✅ bind
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
 });
