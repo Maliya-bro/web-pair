@@ -12,14 +12,10 @@
 
     <style>
       :root {
-        --glass-bg: rgba(0, 0, 0, 0.38);
+        --glass-bg: rgba(0, 0, 0, 0.45);
         --glass-border: rgba(255, 255, 255, 0.14);
         --text: #ffffff;
         --muted: rgba(255, 255, 255, 0.75);
-        --soft: rgba(255, 255, 255, 0.08);
-        --brand: #25d366;
-        --brand2: #1ebe5d;
-        --ring: rgba(37, 211, 102, 0.25);
       }
 
       * {
@@ -40,500 +36,515 @@
           no-repeat center center / cover;
       }
 
-      .container {
+      /* --- High Glow 360° Rotating Border --- */
+      @keyframes rotate-border {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes hue-rotate {
+        from { filter: hue-rotate(0deg); }
+        to { filter: hue-rotate(360deg); }
+      }
+
+      .border-wrapper {
+        position: relative;
         width: 100%;
         max-width: 450px;
-        border-radius: 22px;
-        background: var(--glass-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+        padding: 5px; /* border thickness */
+        border-radius: 30px;
         overflow: hidden;
-        position: relative;
-      }
-
-      .inner {
-        padding: 22px;
-      }
-
-      .header {
-        text-align: center;
-        margin-bottom: 18px;
-      }
-
-      .logo {
-        width: 74px;
-        height: 74px;
-        margin: 0 auto 12px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.35);
-        border: 1px solid var(--glass-border);
-        display: grid;
-        place-items: center;
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
-      }
-
-      .logo i {
-        font-size: 30px;
-        color: #fff;
-      }
-
-      .title {
-        font-size: 24px;
-        font-weight: 900;
-        letter-spacing: 0.5px;
-      }
-
-      .subtitle {
-        margin-top: 6px;
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      /* Toggle */
-      .toggle-container {
         display: flex;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--glass-border);
-        border-radius: 14px;
-        padding: 4px;
-        margin: 18px 0 16px;
-        gap: 6px;
+        justify-content: center;
+        align-items: center;
+
+        /* ✅ Glow වැඩි කරලා */
+        box-shadow:
+          0 0 35px rgba(0, 255, 140, 0.35),
+          0 0 70px rgba(0, 255, 255, 0.18);
+
+        animation: hue-rotate 4s linear infinite;
       }
 
-      .toggle-option {
-        flex: 1;
-        padding: 10px 12px;
-        text-align: center;
-        cursor: pointer;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 800;
-        color: var(--muted);
-        transition: transform 220ms ease, background 220ms ease,
-          box-shadow 220ms ease, color 220ms ease;
-        user-select: none;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .toggle-option.active {
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        color: #fff;
-        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
-      }
-
-      /* hover micro animation */
-      .toggle-option:hover {
-        transform: translateY(-2px) scale(1.01);
-      }
-
-      /* Animated sheen on hover */
-      .toggle-option::after {
+      /* ✅ Glow line එක තවත් වැඩි */
+      .border-wrapper::before {
         content: "";
         position: absolute;
-        inset: -40% -80%;
-        background: linear-gradient(
-          120deg,
-          transparent 35%,
-          rgba(255, 255, 255, 0.12),
-          transparent 65%
+        width: 210%;
+        height: 210%;
+        background: conic-gradient(
+          #ff0000, #ffcc00, #25d366, #00ffff, #0055ff, #ff00ff, #ff0000
         );
-        transform: translateX(-60%);
-        transition: transform 420ms ease;
-        pointer-events: none;
-      }
-      .toggle-option:hover::after {
-        transform: translateX(60%);
+        animation: rotate-border 2.2s linear infinite; /* a bit faster */
+        z-index: 0;
+
+        /* ✅ blur + glow වැඩි */
+        filter: blur(9px);
+        opacity: 0.95;
       }
 
-      .input-group {
-        margin-bottom: 14px;
-        transition: all 0.3s ease;
-      }
-      .input-group.hidden {
-        display: none;
-      }
-
-      .input-label {
-        display: block;
-        margin-bottom: 8px;
-        font-size: 12px;
-        color: var(--muted);
-        font-weight: 700;
+      .border-wrapper::after {
+        content: "";
+        position: absolute;
+        inset: 5px;
+        background: #0a0a0a;
+        border-radius: 25px;
+        z-index: 1;
       }
 
-      .input-field {
+      .container {
         width: 100%;
-        padding: 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        background: rgba(0, 0, 0, 0.35);
-        color: #fff;
-        outline: none;
-        font-size: 15px;
-        transition: box-shadow 220ms ease, border-color 220ms ease,
-          transform 220ms ease;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        position: relative;
+        z-index: 2;
+        overflow: hidden;
       }
 
-      .input-field:focus {
-        border-color: rgba(37, 211, 102, 0.7);
-        box-shadow: 0 0 0 3px var(--ring);
-        transform: translateY(-1px);
-      }
-
-      /* Buttons base */
+      /* ===== Buttons Animations ===== */
       .btn {
         width: 100%;
-        padding: 14px;
+        padding: 15px;
         border-radius: 12px;
         border: none;
         cursor: pointer;
         color: #fff;
         font-size: 15px;
         font-weight: 900;
-        letter-spacing: 1px;
-        transition: transform 220ms ease, box-shadow 220ms ease,
-          filter 220ms ease;
+        transition: transform .15s ease, box-shadow .25s ease, filter .2s ease, opacity .2s ease;
         position: relative;
         overflow: hidden;
-        transform: translateZ(0);
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
       }
 
-      /* Hover lift + glow */
-      .btn:hover {
-        transform: translateY(-3px) scale(1.01);
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
-        filter: brightness(1.03);
-      }
-
-      /* Active press */
-      .btn:active {
-        transform: translateY(0px) scale(0.99);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
-      }
-
-      /* Ripple-ish highlight */
-      .btn::after {
+      .btn::before {
         content: "";
         position: absolute;
-        width: 220px;
-        height: 220px;
-        left: var(--mx, 50%);
-        top: var(--my, 50%);
-        transform: translate(-50%, -50%);
-        background: radial-gradient(
-          circle,
-          rgba(255, 255, 255, 0.18) 0%,
-          transparent 60%
-        );
-        opacity: 0;
-        transition: opacity 220ms ease;
+        top: -40%;
+        left: -60%;
+        width: 50%;
+        height: 180%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+        transform: rotate(20deg);
+        transition: left .6s ease;
         pointer-events: none;
       }
-      .btn:hover::after {
-        opacity: 1;
+      .btn:hover::before { left: 120%; }
+      .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+      .btn:active { transform: translateY(0px) scale(.985); }
+
+      .btn .ripple {
+        position: absolute;
+        border-radius: 999px;
+        transform: scale(0);
+        animation: ripple .55s ease-out;
+        background: rgba(255,255,255,.28);
+        pointer-events: none;
       }
+      @keyframes ripple { to { transform: scale(12); opacity: 0; } }
+
+      .btn.loading { cursor: not-allowed; opacity: .92; }
+      .btn.loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.16), rgba(255,255,255,.06));
+        transform: translateX(-120%);
+        animation: shimmer 1.1s linear infinite;
+        pointer-events: none;
+      }
+      @keyframes shimmer { to { transform: translateX(120%); } }
 
       .generate-btn {
-        background: linear-gradient(135deg, var(--brand), var(--brand2));
-        margin-bottom: 12px;
-      }
-
-      .generate-btn.hidden {
-        display: none;
-      }
-
-      .loading {
-        display: none;
-        text-align: center;
-        margin: 10px 0 14px;
-        font-size: 22px;
-      }
-
-      .code-display {
-        background: rgba(0, 0, 0, 0.28);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 14px;
-        padding: 14px;
-        text-align: center;
-        font-weight: 900;
-        min-height: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 12px;
-      }
-
-      .success-message {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        justify-content: center;
-        color: #cfe9ff;
-      }
-
-      .error-message {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        justify-content: center;
-        color: #ffd1d1;
-        font-size: 14px;
-        font-weight: 900;
-      }
-
-      .qr-display {
-        background: rgba(0, 0, 0, 0.28);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 14px;
-        padding: 18px;
-        text-align: center;
-        display: none;
-        margin-bottom: 12px;
-      }
-
-      .qr-image {
-        width: min(280px, 100%);
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-        margin-bottom: 12px;
-      }
-
-      .qr-instructions {
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.5;
+        background: linear-gradient(135deg, #25d366, #1ebe5d);
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
       }
 
       .copy-btn {
         background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.16);
-      }
-
-      .copy-btn.hidden {
+        border: 1px solid rgba(255, 255, 255, 0.15);
         display: none;
+        margin-top: 2px;
       }
 
-      .powered {
-        text-align: center;
-        margin-top: 14px;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.65);
-        font-weight: 700;
+      /* ✅ Song button outside the box */
+      .song-float {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 9999;
+        display: flex;
+        gap: 10px;
+        align-items: center;
       }
 
-      .footer {
-        padding: 12px 16px;
-        text-align: center;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.55);
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(0, 0, 0, 0.15);
+      .song-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.18);
+        background: rgba(0,0,0,.45);
+        color: #fff;
+        font-weight: 900;
+        cursor: pointer;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,.06) inset,
+          0 10px 25px rgba(0,0,0,.35);
+        transition: transform .15s ease, box-shadow .25s ease, background .25s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .song-btn:hover { transform: translateY(-2px); background: rgba(0,0,0,.55); }
+      .song-btn:active { transform: translateY(0px) scale(.985); }
+
+      .song-btn.playing {
+        box-shadow:
+          0 0 0 2px rgba(37,211,102,.25),
+          0 0 20px rgba(37,211,102,.25),
+          0 12px 28px rgba(0,0,0,.35);
       }
 
-      @media (max-width: 480px) {
-        .inner {
-          padding: 18px;
-        }
-        .title {
-          font-size: 22px;
-        }
+      .song-btn .ripple { position: absolute; border-radius: 999px; transform: scale(0); animation: ripple .55s ease-out; background: rgba(255,255,255,.28); pointer-events: none; }
+
+      /* --------------------------------- */
+      .inner { padding: 25px; }
+      .header { text-align: center; margin-bottom: 18px; }
+
+      .logo {
+        width: 75px; height: 75px; margin: 0 auto 12px;
+        border-radius: 50%; background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--glass-border);
+        display: grid; place-items: center;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+      .logo i { font-size: 32px; color: #fff; }
+
+      .title { font-size: 26px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+      .subtitle { font-size: 13px; color: var(--muted); margin-top: 5px; }
+
+      .toggle-container {
+        display: flex; background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px; padding: 4px; margin: 18px 0 14px; gap: 6px;
+      }
+
+      .toggle-option {
+        flex: 1; padding: 10px; text-align: center; cursor: pointer;
+        border-radius: 10px; font-size: 14px; font-weight: 800;
+        color: var(--muted); transition: 0.25s ease;
+        position: relative; overflow: hidden;
+      }
+      .toggle-option:hover { transform: translateY(-1px); color: #fff; }
+      .toggle-option.active { background: rgba(255, 255, 255, 0.15); color: #fff; }
+
+      .input-group { margin-bottom: 15px; }
+      .input-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+      .input-field {
+        width: 100%; padding: 14px; border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.5); color: #fff; outline: none;
+        transition: box-shadow .25s ease, border-color .25s ease, transform .15s ease;
+      }
+      .input-field:focus {
+        border-color: rgba(37,211,102,.55);
+        box-shadow: 0 0 0 3px rgba(37,211,102,.18);
+        transform: translateY(-1px);
+      }
+
+      .code-display {
+        background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px; padding: 15px; text-align: center;
+        font-weight: 900; margin-bottom: 15px; min-height: 55px;
+        display: flex; align-items: center; justify-content: center;
+        position: relative; overflow: hidden;
+      }
+
+      .dots { display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
+      .dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: rgba(255,255,255,.65);
+        animation: bounce 0.9s infinite;
+      }
+      .dot:nth-child(2) { animation-delay: .12s; }
+      .dot:nth-child(3) { animation-delay: .24s; }
+      @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); opacity: .6; }
+        40% { transform: translateY(-6px); opacity: 1; }
+      }
+
+      .qr-display { display: none; text-align: center; margin-bottom: 15px; }
+      .qr-image { width: 100%; max-width: 250px; border-radius: 15px; border: 4px solid rgba(255, 255, 255, 0.1); }
+
+      .scan-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 250px;
+        margin: 0 auto;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .scan-line {
+        position: absolute;
+        left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(0,255,255,.9), transparent);
+        box-shadow: 0 0 14px rgba(0,255,255,.55);
+        animation: scan 1.2s ease-in-out infinite;
+        z-index: 2;
+      }
+      @keyframes scan {
+        0% { top: 0%; opacity: .2; }
+        50% { top: 92%; opacity: 1; }
+        100% { top: 0%; opacity: .2; }
+      }
+
+      .powered { text-align: center; font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 12px; }
+      .footer { padding: 15px; text-align: center; font-size: 11px; color: rgba(255, 255, 255, 0.4); background: rgba(0,0,0,0.2); }
+      .hidden { display: none; }
+
+      .fade-in { animation: fadeIn .25s ease both; }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
       }
     </style>
   </head>
 
   <body>
-    <div class="container">
-      <div class="inner">
-        <div class="header">
-          <div class="logo"><i class="fas fa-robot"></i></div>
-          <div class="title">MALIYA-MD</div>
-          <div class="subtitle">Link your WhatsApp device</div>
-        </div>
-
-        <div class="toggle-container">
-          <div class="toggle-option active" data-mode="pair">
-            <i class="fas fa-key"></i> Pair Code
-          </div>
-          <div class="toggle-option" data-mode="qr">
-            <i class="fas fa-qrcode"></i> QR Code
-          </div>
-        </div>
-
-        <div class="input-group" id="inputGroup">
-          <label class="input-label">WhatsApp number with country code</label>
-          <input
-            type="text"
-            id="mobileNumber"
-            class="input-field"
-            placeholder="+9477xxxxxxx"
-            pattern="[+][0-9]{10,}"
-            title="Please enter country code starting with + followed by number"
-          />
-        </div>
-
-        <button class="btn generate-btn" id="submit">
-          <i class="fas fa-key"></i> Generate Pair Code
-        </button>
-
-        <div class="loading" id="loading">
-          <i class="fas fa-spinner fa-spin"></i>
-        </div>
-
-        <div class="code-display" id="codeDisplay">Your pair code will appear here</div>
-
-        <div class="qr-display" id="qrDisplay">
-          <img id="qrImage" class="qr-image" src="" alt="QR Code" />
-          <div class="qr-instructions" id="qrInstructions">
-            Scan this QR code with your WhatsApp app
-          </div>
-        </div>
-
-        <button class="btn copy-btn hidden" id="copyBtn" onclick="copyCode()">
-          <i class="fas fa-copy"></i> Copy Code
-        </button>
-
-        <div class="powered">Powered by Malindu Nadith</div>
-      </div>
-
-      <div class="footer">© 2025 MALIYA-MD</div>
+    <!-- ✅ Outside floating song Play/Pause button (one button) -->
+    <div class="song-float">
+      <button class="song-btn" id="songBtn" title="Play / Pause">
+        <i class="fa-solid fa-music"></i>
+        <span id="songText">Play Song</span>
+      </button>
     </div>
 
+    <div class="border-wrapper">
+      <div class="container">
+        <div class="inner">
+          <div class="header">
+            <div class="logo"><i class="fas fa-robot"></i></div>
+            <div class="title">MALIYA-MD</div>
+            <div class="subtitle">Secure Pairing Gateway</div>
+          </div>
+
+          <div class="toggle-container">
+            <div class="toggle-option active" id="pairMode">Pair Code</div>
+            <div class="toggle-option" id="qrMode">QR Code</div>
+          </div>
+
+          <div id="pairSection" class="fade-in">
+            <div class="input-group">
+              <label class="input-label">WhatsApp Number (+94xxx)</label>
+              <input type="text" id="mobileNumber" class="input-field" placeholder="+947XXXXXXXX or 947XXXXXXXX">
+            </div>
+            <button class="btn generate-btn" id="submitBtn">Generate Code</button>
+          </div>
+
+          <div class="qr-display" id="qrSection">
+            <div class="scan-wrap" id="scanWrap" style="display:none;">
+              <div class="scan-line"></div>
+              <img id="qrImage" class="qr-image" src="" alt="QR">
+            </div>
+            <p style="font-size: 11px; color: #888; margin-top: 10px;">Scan QR with your Phone</p>
+          </div>
+
+          <div class="code-display" id="codeDisplay">Enter your number above</div>
+          <button class="btn copy-btn" id="copyBtn">Copy Connection Code</button>
+
+          <div class="powered">POWERED BY MALINDU NADITH</div>
+        </div>
+        <div class="footer">© 2025 MALIYA-MD BOT</div>
+      </div>
+    </div>
+
+    <audio id="bgSong" src="song.mp3" preload="auto" loop></audio>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
-
     <script>
-      let currentMode = "pair";
+      const pairBtn = document.getElementById('pairMode');
+      const qrBtn = document.getElementById('qrMode');
+      const pairSection = document.getElementById('pairSection');
+      const qrSection = document.getElementById('qrSection');
+      const codeDisplay = document.getElementById('codeDisplay');
+      const copyBtn = document.getElementById('copyBtn');
+      const submitBtn = document.getElementById('submitBtn');
+      const qrImage = document.getElementById('qrImage');
+      const scanWrap = document.getElementById('scanWrap');
 
-      // ===== nice hover ripple follow (mouse position) =====
-      document.querySelectorAll(".btn").forEach((btn) => {
-        btn.addEventListener("mousemove", (e) => {
-          const r = btn.getBoundingClientRect();
-          btn.style.setProperty("--mx", `${e.clientX - r.left}px`);
-          btn.style.setProperty("--my", `${e.clientY - r.top}px`);
-        });
-      });
+      // Song
+      const bgSong = document.getElementById('bgSong');
+      const songBtn = document.getElementById('songBtn');
+      const songText = document.getElementById('songText');
 
-      // Toggle functionality
-      document.querySelectorAll(".toggle-option").forEach((option) => {
-        option.addEventListener("click", function () {
-          const mode = this.dataset.mode;
-          if (mode === currentMode) return;
+      // helpers
+      function setCode(textOrHtml, isHtml=false) {
+        if(isHtml) codeDisplay.innerHTML = textOrHtml;
+        else codeDisplay.innerText = textOrHtml;
+        codeDisplay.classList.remove('fade-in');
+        void codeDisplay.offsetWidth;
+        codeDisplay.classList.add('fade-in');
+      }
 
-          document.querySelectorAll(".toggle-option").forEach((opt) => opt.classList.remove("active"));
-          this.classList.add("active");
-          currentMode = mode;
+      function showDots(label="Generating") {
+        setCode(`
+          <span style="display:inline-flex; gap:10px; align-items:center; font-size:12px; font-weight:900;">
+            <i class="fa-solid fa-bolt"></i> ${label}
+            <span class="dots" aria-hidden="true">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </span>
+          </span>
+        `, true);
+      }
 
-          const submitBtn = document.getElementById("submit");
-          const inputGroup = document.getElementById("inputGroup");
-
-          // reset displays
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("qrDisplay").style.display = "none";
-          document.getElementById("codeDisplay").style.display = "flex";
-          document.getElementById("codeDisplay").innerHTML = "Your pair code will appear here";
-          document.getElementById("copyBtn").classList.add("hidden");
-
-          if (mode === "pair") {
-            submitBtn.classList.remove("hidden");
-            inputGroup.classList.remove("hidden");
-          } else {
-            submitBtn.classList.add("hidden");
-            inputGroup.classList.add("hidden");
-            generateQRCode();
-          }
-        });
-      });
-
-      async function generateQRCode() {
-        const codeDisplay = document.getElementById("codeDisplay");
-        const qrDisplay = document.getElementById("qrDisplay");
-        const loadingSpinner = document.getElementById("loading");
-
-        loadingSpinner.style.display = "block";
-        codeDisplay.innerHTML = "";
-        qrDisplay.style.display = "none";
-
-        try {
-          const response = await axios("/qr");
-          if (response.data.qr) {
-            document.getElementById("qrImage").src = response.data.qr;
-            document.getElementById("qrInstructions").innerHTML =
-              (response.data.instructions || ["Scan this QR code with your WhatsApp app"]).join("<br>");
-            qrDisplay.style.display = "block";
-            codeDisplay.style.display = "none";
-          } else {
-            codeDisplay.innerHTML =
-              '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Failed to generate QR code</div>';
-            codeDisplay.style.display = "flex";
-          }
-        } catch (error) {
-          console.error("Error generating QR code:", error);
-          codeDisplay.innerHTML =
-            '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Error generating QR code. Please try again.</div>';
-          codeDisplay.style.display = "flex";
-        } finally {
-          loadingSpinner.style.display = "none";
+      function setBtnLoading(btn, loading=true, textWhenLoading="Please wait...") {
+        if(loading){
+          btn.classList.add('loading');
+          btn.disabled = true;
+          btn.dataset.oldText = btn.innerText;
+          btn.innerText = textWhenLoading;
+        } else {
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          if(btn.dataset.oldText) btn.innerText = btn.dataset.oldText;
         }
       }
 
-      document.getElementById("submit").addEventListener("click", async (e) => {
-        e.preventDefault();
+      // Ripple for buttons & toggles
+      function addRipple(e){
+        const el = e.currentTarget;
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        const rect = el.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        r.style.width = r.style.height = size + 'px';
+        r.style.left = (e.clientX - rect.left - size/2) + 'px';
+        r.style.top  = (e.clientY - rect.top  - size/2) + 'px';
+        el.appendChild(r);
+        setTimeout(()=> r.remove(), 650);
+      }
 
-        const mobileNumberInput = document.getElementById("mobileNumber");
-        const codeDisplay = document.getElementById("codeDisplay");
-        const loadingSpinner = document.getElementById("loading");
-
-        const mobileNumber = mobileNumberInput.value.trim();
-        if (!mobileNumber) {
-          codeDisplay.innerHTML =
-            '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Please enter your WhatsApp number</div>';
-          return;
-        }
-
-        loadingSpinner.style.display = "block";
-        codeDisplay.innerHTML = "";
-
-        try {
-          const response = await axios(`/pair?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
-
-          const code = response.data.code || "Service Unavailable";
-          if (code === "Service Unavailable") {
-            codeDisplay.innerHTML =
-              '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Service Unavailable</div>';
-            document.getElementById("copyBtn").classList.add("hidden");
-          } else {
-            codeDisplay.innerHTML =
-              `<div class="success-message"><i class="fas fa-check-circle"></i> CODE: <span id="pairCode">${code}</span></div>`;
-            document.getElementById("copyBtn").classList.remove("hidden");
-          }
-
-          codeDisplay.style.display = "flex";
-        } catch (error) {
-          console.error("Error generating code:", error);
-          codeDisplay.innerHTML =
-            '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Error generating code. Please try again.</div>';
-          codeDisplay.style.display = "flex";
-          document.getElementById("copyBtn").classList.add("hidden");
-        } finally {
-          loadingSpinner.style.display = "none";
-        }
+      // attach ripple
+      document.querySelectorAll('button, .toggle-option').forEach(el=>{
+        el.addEventListener('click', addRipple);
       });
 
-      function copyCode() {
-        const pairCodeEl = document.getElementById("pairCode");
-        if (!pairCodeEl) return;
+      // Mode switch
+      pairBtn.onclick = () => {
+        pairBtn.classList.add('active');
+        qrBtn.classList.remove('active');
 
-        const code = pairCodeEl.innerText.trim();
-        navigator.clipboard.writeText(code).then(() => {
-          const btn = document.getElementById("copyBtn");
-          const old = btn.innerHTML;
-          btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-          setTimeout(() => (btn.innerHTML = old), 1600);
-        });
+        pairSection.classList.remove('hidden');
+        pairSection.classList.add('fade-in');
+
+        qrSection.style.display = 'none';
+        scanWrap.style.display = 'none';
+        qrImage.src = "";
+
+        copyBtn.style.display = 'none';
+        setCode("Enter your number above");
+      };
+
+      qrBtn.onclick = async () => {
+        qrBtn.classList.add('active');
+        pairBtn.classList.remove('active');
+
+        pairSection.classList.add('hidden');
+        qrSection.style.display = 'block';
+
+        copyBtn.style.display = 'none';
+
+        // QR generating animation + scan frame
+        showDots("Generating QR");
+        scanWrap.style.display = 'block';
+        qrImage.src = "";
+
+        try {
+          const res = await axios('/qr');
+          if(res.data && res.data.qr) {
+            qrImage.src = res.data.qr;
+            setCode("Scan the QR Code");
+          } else {
+            setCode("QR unavailable right now");
+          }
+        } catch (e) {
+          setCode("Error loading QR");
+        }
+      };
+
+      // Pair generate
+      submitBtn.onclick = async () => {
+        const num = document.getElementById('mobileNumber').value;
+        if(!num) return;
+
+        copyBtn.style.display = 'none';
+
+        setBtnLoading(submitBtn, true, "Generating...");
+        showDots("Generating Pair Code");
+
+        try {
+          const clean = num.replace(/[^0-9]/g, "");
+          const res = await axios(`/pair?number=${clean}`);
+          const code = (res.data && res.data.code) ? res.data.code : "Unavailable";
+
+          setCode(`<span style="color:#00ff00; font-size:24px; text-shadow: 0 0 12px #00ff00;">${code}</span>`, true);
+
+          copyBtn.style.display = 'block';
+          copyBtn.classList.add('fade-in');
+          copyBtn.onclick = async () => {
+            try{
+              await navigator.clipboard.writeText(code);
+              copyBtn.innerText = "COPIED!";
+              setTimeout(() => copyBtn.innerText = "Copy Connection Code", 2000);
+            }catch(err){
+              copyBtn.innerText = "Copy Failed";
+              setTimeout(() => copyBtn.innerText = "Copy Connection Code", 2000);
+            }
+          };
+        } catch (e) {
+          setCode("Server Error");
+        } finally {
+          setBtnLoading(submitBtn, false);
+        }
+      };
+
+      // ✅ Song Play/Pause (single button)
+      let isPlaying = false;
+      bgSong.volume = 0.85;
+
+      async function playSong(){
+        try{
+          await bgSong.play(); // must be user click
+          isPlaying = true;
+          songText.innerText = "Pause Song";
+          songBtn.classList.add('playing');
+          songBtn.querySelector('i').className = "fa-solid fa-pause";
+        }catch(e){
+          songText.innerText = "Song Error";
+          setTimeout(()=> songText.innerText = "Play Song", 2000);
+        }
       }
+
+      function pauseSong(){
+        bgSong.pause();
+        isPlaying = false;
+        songText.innerText = "Play Song";
+        songBtn.classList.remove('playing');
+        songBtn.querySelector('i').className = "fa-solid fa-music";
+      }
+
+      songBtn.onclick = async () => {
+        if(!isPlaying) await playSong();
+        else pauseSong();
+      };
     </script>
   </body>
 </html>
