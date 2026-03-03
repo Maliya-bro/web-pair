@@ -11,38 +11,37 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ✅ Deploy-safe PORT (fallback 5000)
 const PORT = process.env.PORT || 5000;
 
+// ✅ Increase event listeners limit (avoid warnings/crash)
 import("events").then((events) => {
   events.EventEmitter.defaultMaxListeners = 500;
 });
 
+// ✅ Health check endpoints (at the top)
+app.get(["/health", "/_health", "/ping"], (req, res) => {
+  res.status(200).send("OK");
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// ✅ serve static files (pair.html, assets)
 app.use(express.static(__dirname));
 
-// ✅ SUPER FAST health for deploy (this is what Replit pings)
+// UI
 app.get("/", (req, res) => {
-  res.status(200).type("text/plain").send("OK");
-});
-
-// ✅ keep your old health routes too
-app.get(["/health", "/_health", "/ping"], (req, res) => {
-  res.status(200).type("text/plain").send("OK");
-});
-
-// ✅ UI moved to /ui (health check wont load html now)
-app.get("/ui", (req, res) => {
-  res.sendFile(path.join(__dirname, "pair.html"));
+  try {
+    res.sendFile(path.join(__dirname, "pair.html"));
+  } catch (err) {
+    res.status(500).send("Error loading UI");
+  }
 });
 
 // Routers
 app.use("/pair", pairRouter);
 app.use("/qr", qrRouter);
 
-// ✅ Replit deploy ok with 0.0.0.0
+// ✅ Bind 0.0.0.0 :5000
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
 });
