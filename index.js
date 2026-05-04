@@ -5,7 +5,6 @@ import path from "path";
 
 import pairRouter from "./pair.js";
 import qrRouter from "./qr.js";
-import { getSessionId, setSessionId } from "./session-store.js";
 
 const app = express();
 
@@ -38,18 +37,14 @@ app.get("/", (req, res) => {
   }
 });
 
-app.get("/session-id", (req, res) => {
-  res.json({ sessionId: getSessionId() });
-});
-
-app.post("/session-id/clear", (req, res) => {
-  setSessionId("");
-  res.json({ ok: true });
-});
 
 app.use("/pair", pairRouter);
 app.use("/qr", qrRouter);
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+  });
+}
+
+export default app;
