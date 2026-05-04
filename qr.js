@@ -11,7 +11,6 @@ import {
 } from "@whiskeysockets/baileys";
 import QRCode from "qrcode";
 import { saveSessionState } from "./mongodb.js";
-import { setSessionId } from "./session-store.js";
 
 const router = express.Router();
 
@@ -161,7 +160,6 @@ router.get("/", async (req, res) => {
                             "✅ Session uploaded to MongoDB. Session ID:",
                             savedSessionId,
                         );
-                        setSessionId(savedSessionId);
 
                         console.log("🧹 Cleaning up session...");
                         await delay(1000);
