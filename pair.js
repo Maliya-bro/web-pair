@@ -11,7 +11,6 @@ import {
 } from "@whiskeysockets/baileys";
 import { phone as validatePhone } from "phone";
 import { saveSessionState } from "./mongodb.js";
-import { setSessionId } from "./session-store.js";
 
 const router = express.Router();
 
@@ -117,7 +116,6 @@ router.get("/", async (req, res) => {
                         });
 
                         console.log("✅ Session saved. ID:", savedSessionId);
-                        setSessionId(savedSessionId);
 
                         await delay(1500);
                         KnightBot.ev.removeAllListeners();
